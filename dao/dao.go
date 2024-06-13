@@ -46,3 +46,7 @@ func Connect() (Dao, error) {
 func getDB() *sql.DB {
 	return db.DB
 }
+
+func GetDao() Dao {
+	return db
+}

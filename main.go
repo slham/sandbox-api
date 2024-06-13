@@ -22,7 +22,7 @@ func main() {
 		}
 		slog.Info("running on local")
 	default:
-		slog.Info("invalid environment: %s", env)
+		slog.Info("invalid environment", "env", env)
 		os.Exit(1)
 	}
 }
