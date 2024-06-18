@@ -30,7 +30,7 @@ func TestIsAlphaNumeric(t *testing.T) {
 	}
 
 	for _, table := range tables {
-		status, err := isAlphaNumeric(table.input)
+		status, err := IsAlphaNumeric(table.input)
 		assert.Equal(t, table.expected1, status, "status does not match")
 		assert.Equal(t, table.expected2, err, "errors do not match")
 	}
@@ -53,7 +53,7 @@ func TestIsNumber(t *testing.T) {
 	}
 
 	for _, table := range tables {
-		status, err := isNumber(table.input)
+		status, err := IsNumber(table.input)
 		assert.Equal(t, table.expected1, status, "status does not match")
 		assert.Equal(t, table.expected2, err, "errors do not match")
 	}
@@ -76,7 +76,7 @@ func TestIsMediumPassword(t *testing.T) {
 	}
 
 	for _, table := range tables {
-		status, err := isMediumPassword(table.input)
+		status, err := IsMediumPassword(table.input)
 		assert.Equal(t, table.expected1, status, "status does not match")
 		assert.Equal(t, table.expected2, err, "errors do not match")
 	}
@@ -99,7 +99,7 @@ func TestIsStrongPassword(t *testing.T) {
 	}
 
 	for _, table := range tables {
-		status, err := isStrongPassword(table.input)
+		status, err := IsStrongPassword(table.input)
 		assert.Equal(t, table.expected1, status, "status does not match")
 		assert.Equal(t, table.expected2, err, "errors do not match")
 	}
@@ -127,7 +127,7 @@ func TestIsEmail(t *testing.T) {
 	}
 
 	for _, table := range tables {
-		status, err := isEmail(table.input)
+		status, err := IsEmail(table.input)
 		assert.Equal(t, table.expected1, status, "status does not match")
 		assert.Equal(t, table.expected2, err, "errors do not match")
 	}
