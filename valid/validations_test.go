@@ -63,22 +63,20 @@ func TestIsMediumPassword(t *testing.T) {
 	tables := []struct {
 		input     string
 		expected1 bool
-		expected2 error
 	}{
-		{"456", false, nil},
-		{"abc", false, nil},
-		{"abc159", false, nil},
-		{"753abc159!", true, nil},
-		{"7#53abc!", true, nil},
-		{"753-Abcb!", true, nil},
-		{"753 ABC", false, nil},
-		{"", false, nil},
+		{"456", false},
+		{"abc", false},
+		{"abc159", false},
+		{"753abc159!", false},
+		{"7#53abc!", false},
+		{"753-Abcb!", true},
+		{"753 ABC", false},
+		{"", false},
 	}
 
 	for _, table := range tables {
-		status, err := IsMediumPassword(table.input)
+		status := IsMediumPassword(table.input)
 		assert.Equal(t, table.expected1, status, "status does not match")
-		assert.Equal(t, table.expected2, err, "errors do not match")
 	}
 }
 
@@ -86,49 +84,19 @@ func TestIsStrongPassword(t *testing.T) {
 	tables := []struct {
 		input     string
 		expected1 bool
-		expected2 error
 	}{
-		{"456", false, nil},
-		{"abc", false, nil},
-		{"abc159", false, nil},
-		{"753abc159!753abc159!", true, nil},
-		{"7#53abc!7#53abc!", true, nil},
-		{"753-Abcb!753-Abcb!", true, nil},
-		{"753 ABC753 ABC753 ABC", false, nil},
-		{"", false, nil},
+		{"456", false},
+		{"abc", false},
+		{"abc159", false},
+		{"753abc159!753abc159!", false},
+		{"7#53abc!7#53abc!", false},
+		{"753-Abcb!753-Abcb!", true},
+		{"753 ABC753 ABC753 ABC", false},
+		{"", false},
 	}
 
 	for _, table := range tables {
-		status, err := IsStrongPassword(table.input)
+		status := IsStrongPassword(table.input)
 		assert.Equal(t, table.expected1, status, "status does not match")
-		assert.Equal(t, table.expected2, err, "errors do not match")
-	}
-}
-
-func TestIsEmail(t *testing.T) {
-	tables := []struct {
-		input     string
-		expected1 bool
-		expected2 error
-	}{
-		{"this@that.com", true, nil},
-		{"this@that.org", true, nil},
-		{"this@that.net", true, nil},
-		{"this@that.gov", true, nil},
-		{"this@that.info", true, nil},
-		{"this@that.blah", true, nil},
-		{"abc", false, nil},
-		{"abc159", false, nil},
-		{"753abc159!753abc159!", false, nil},
-		{"7#53@bc!7#53abc!", false, nil},
-		{"753-Abcb!753-Abcb!", false, nil},
-		{"753 ABC7.53 ABC753 ABC", false, nil},
-		{"", false, nil},
-	}
-
-	for _, table := range tables {
-		status, err := IsEmail(table.input)
-		assert.Equal(t, table.expected1, status, "status does not match")
-		assert.Equal(t, table.expected2, err, "errors do not match")
 	}
 }

@@ -6,8 +6,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log/slog"
 	"net/http"
+	"time"
 
+	"github.com/slham/sandbox-api/crypt"
 	"github.com/slham/sandbox-api/dao"
 	"github.com/slham/sandbox-api/model"
 	"github.com/slham/sandbox-api/request"
@@ -15,7 +18,7 @@ import (
 )
 
 type createUserRequest struct {
-	UserName string `json:"name"`
+	Username string `json:"username"`
 	Password string `json:"password"`
 	Email    string `json:"email"`
 }
@@ -46,7 +49,7 @@ func (c *UserController) CreateUser(w http.ResponseWriter, r *http.Request) {
 
 	user, err := c.createUser(ctx, req)
 	if err != nil {
-		if errors.Is(err, ApiError) {
+		if errors.Is(err, ApiError{}) {
 			apiErr, _ := err.(ApiError)
 			slog.Warn("error creating user", "err", apiErr)
 			request.RespondWithError(w, apiErr.StatusCode, apiErr.Errs)
@@ -69,6 +72,21 @@ func (c *UserController) createUser(ctx context.Context, req createUserRequest) 
 		return user, fmt.Errorf("failed to validate create user request. %w", err)
 	}
 
+	var err error
+	user.Password, err = crypt.Encrypt(req.Password)
+	if err != nil {
+		return user, fmt.Errorf("failed to encrypt password. %w", err)
+	}
+
+	user.Created = time.Now()
+	user.Updated = time.Now()
+
+	user, err = dao.InsertUser(ctx, user)
+	if err != nil {
+		slog.Error("failed to insert user", "err", err)
+		return user, fmt.Errorf("failed to insert user. %w", err)
+	}
+
 	user.Password = ""
 	return user, nil
 }
@@ -80,16 +98,16 @@ func validateCreateUserRequest(ctx context.Context, req createUserRequest) error
 		apiErr = apiErr.Append("username must be at leat four characters long")
 	}
 
-	if ok, _ := valid.IsMediumPassword(req.Password); !ok {
+	if ok := valid.IsMediumPassword(req.Password); !ok {
 		apiErr = apiErr.Append("password must be at least 8 characters long and contain at least one number, one special character, one upper case character, and one lower case character")
 	}
 
-	if ok, _ := valid.IsEmail(req.Email); !ok {
+	if err := valid.IsEmail(req.Email); err != nil {
 		apiErr = apiErr.Append("invalid email")
 	}
 
-	if apiError.HasError() {
-		return apiError
+	if apiErr.HasError() {
+		return apiErr
 	}
 
 	return nil

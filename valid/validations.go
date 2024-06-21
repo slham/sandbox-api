@@ -2,7 +2,9 @@ package valid
 
 import (
 	"fmt"
+	"net/mail"
 	"regexp"
+	"unicode"
 
 	"github.com/slham/sandbox-api/constant"
 )
@@ -15,16 +17,17 @@ func IsNumber(s string) (bool, error) {
 	return regexp.Match(constant.NumberRegex.String(), []byte(s))
 }
 
-func IsMediumPassword(s string) (bool, error) {
-	return regexp.Match(constant.MediumPasswordRegex.String(), []byte(s))
+func IsMediumPassword(s string) bool {
+	return isValidPassword(s, 8)
 }
 
-func IsStrongPassword(s string) (bool, error) {
-	return regexp.Match(constant.StrongPasswordRegex.String(), []byte(s))
+func IsStrongPassword(s string) bool {
+	return isValidPassword(s, 16)
 }
 
-func IsEmail(s string) (bool, error) {
-	return regexp.Match(constant.EmailRegex.String(), []byte(s))
+func IsEmail(s string) error {
+	_, err := mail.ParseAddress(s)
+	return err
 }
 
 func validateWithRegex(input string, f func(string) (bool, error)) (bool, error) {
@@ -35,4 +38,30 @@ func validateWithRegex(input string, f func(string) (bool, error)) (bool, error)
 	}
 
 	return true, nil
+}
+
+func isValidPassword(s string, minLen int) bool {
+	var (
+		hasMinLen  = false
+		hasUpper   = false
+		hasLower   = false
+		hasNumber  = false
+		hasSpecial = false
+	)
+	if len(s) >= minLen {
+		hasMinLen = true
+	}
+	for _, char := range s {
+		switch {
+		case unicode.IsUpper(char):
+			hasUpper = true
+		case unicode.IsLower(char):
+			hasLower = true
+		case unicode.IsNumber(char):
+			hasNumber = true
+		case unicode.IsPunct(char) || unicode.IsSymbol(char):
+			hasSpecial = true
+		}
+	}
+	return hasMinLen && hasUpper && hasLower && hasNumber && hasSpecial
 }

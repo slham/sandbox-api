@@ -6,6 +6,7 @@ require (
 	github.com/lib/pq v1.10.9
 	github.com/slham/toolbelt v0.0.0-20240415055821-bccf06e6e70f
 	github.com/stretchr/testify v1.9.0
+	gopkg.in/go-playground/assert.v1 v1.2.1
 )
 
 require (
