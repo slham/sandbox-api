@@ -1,17 +1,18 @@
 package main
 
 import (
-    "context"
+	"context"
 	"log"
 	"log/slog"
-    "net/http"
-    "os"
-    "os/signal"
-    "syscall"
-    "time"
+	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
 
-    "github.com/gorilla/mux"
+	"github.com/gorilla/mux"
 	"github.com/slham/sandbox-api/dao"
+	"github.com/slham/sandbox-api/handler"
 	"github.com/slham/toolbelt/l"
 )
 
@@ -32,34 +33,41 @@ func main() {
 		os.Exit(1)
 	}
 
-    r := mux.NewRouter()
+	// Controllers
+	userController := handler.NewUserController()
 
-    //TODO - add api routes
+	r := mux.NewRouter()
 
-    srv := &http.Server{
-        Addr:":8080",
-        Handler: r,
-        ReadTimeout: 15 * time.Second,
-        WriteTimeout: 15 * time.Second,
-    }
+	// Middlewares
+	//r.Use(l.Logging)
 
-    go func(){
-        slog.Info("starting server")
-        if err := srv.ListenAndServe(); err != nil {
-            log.Fatalf("failed to serve. %s", err)
-        }
-    }()
+	// User APIs
+	r.Methods("POST").Path("/users").HandlerFunc(userController.CreateUser)
 
-    quit := make(chan os.Signal, 1)
-    signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
-    <-quit
-    slog.Info("stopping server")
+	srv := &http.Server{
+		Addr:         ":8080",
+		Handler:      r,
+		ReadTimeout:  15 * time.Second,
+		WriteTimeout: 15 * time.Second,
+	}
 
-    ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-    defer cancel()
+	go func() {
+		slog.Info("starting server")
+		if err := srv.ListenAndServe(); err != nil {
+			log.Fatalf("failed to serve. %s", err)
+		}
+	}()
 
-    if err := srv.Shutdown(ctx); err != nil {
-        log.Fatalf("failed to gracefully shutdown: %s", err)
-    }
-    slog.Info("server gracefully stopped")
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+	<-quit
+	slog.Info("stopping server")
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	if err := srv.Shutdown(ctx); err != nil {
+		log.Fatalf("failed to gracefully shutdown: %s", err)
+	}
+	slog.Info("server gracefully stopped")
 }

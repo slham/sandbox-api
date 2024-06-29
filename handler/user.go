@@ -43,21 +43,20 @@ func (c *UserController) CreateUser(w http.ResponseWriter, r *http.Request) {
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		slog.Warn("error decoding create user request", "err", err)
-		request.RespondWithError(w, http.StatusBadRequest, []string{"malformed request body"})
+		request.RespondWithError(w, http.StatusBadRequest, "malformed request body")
 		return
 	}
 
 	user, err := c.createUser(ctx, req)
 	if err != nil {
-		if errors.Is(err, ApiError{}) {
-			apiErr, _ := err.(ApiError)
-			slog.Warn("error creating user", "err", apiErr)
-			request.RespondWithError(w, apiErr.StatusCode, apiErr.Errs)
+		if errors.Is(err, ApiErrBadRequest) {
+			slog.Warn("error creating user", "err", err)
+			request.RespondWithError(w, http.StatusBadRequest, err.Error())
 			return
 		}
 
 		slog.Error("error creating user", "err", err)
-		request.RespondWithError(w, http.StatusInternalServerError, []string{"internal server error"})
+		request.RespondWithError(w, http.StatusInternalServerError, "internal server error")
 		return
 	}
 
@@ -92,7 +91,7 @@ func (c *UserController) createUser(ctx context.Context, req createUserRequest) 
 }
 
 func validateCreateUserRequest(ctx context.Context, req createUserRequest) error {
-	apiErr := ApiError{StatusCode: 400}
+	apiErr := NewApiError(400, ApiErrBadRequest)
 
 	if len(req.Username) < 4 {
 		apiErr = apiErr.Append("username must be at leat four characters long")
