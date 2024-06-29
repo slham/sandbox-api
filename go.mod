@@ -6,6 +6,7 @@ require (
 	github.com/gorilla/mux v1.8.1
 	github.com/lib/pq v1.10.9
 	github.com/slham/toolbelt v0.0.0-20240415055821-bccf06e6e70f
+	github.com/steinfletcher/apitest v1.5.16
 	github.com/stretchr/testify v1.9.0
 	gopkg.in/go-playground/assert.v1 v1.2.1
 )
