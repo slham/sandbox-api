@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
+	"github.com/slham/sandbox-api/crypt"
 	"github.com/slham/sandbox-api/dao"
 	"github.com/slham/sandbox-api/handler"
 	"github.com/slham/toolbelt/l"
@@ -27,6 +28,7 @@ func main() {
 		if err != nil {
 			log.Fatalf("failed to connect to database. %s", err)
 		}
+		crypt.Initialize(os.Getenv("SANDBOX_AUTH_KEY"))
 		slog.Info("running on local")
 	default:
 		slog.Info("invalid environment", "env", env)

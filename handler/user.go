@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/segmentio/ksuid"
 	"github.com/slham/sandbox-api/crypt"
 	"github.com/slham/sandbox-api/dao"
 	"github.com/slham/sandbox-api/model"
@@ -77,17 +78,26 @@ func (c *UserController) createUser(ctx context.Context, req createUserRequest) 
 		return user, fmt.Errorf("failed to encrypt password. %w", err)
 	}
 
+	user.ID = newUserId()
+	user.Username = req.Username
+	user.Email = req.Email
 	user.Created = time.Now()
 	user.Updated = time.Now()
 
-	user, err = dao.InsertUser(ctx, user)
-	if err != nil {
-		slog.Error("failed to insert user", "err", err)
-		return user, fmt.Errorf("failed to insert user. %w", err)
-	}
+	user = dao.InsertUser(ctx, user)
+	/*
+		if err != nil {
+			slog.Error("failed to insert user", "err", err)
+			return user, fmt.Errorf("failed to insert user. %w", err)
+		}
+	*/
 
 	user.Password = ""
 	return user, nil
+}
+
+func newUserId() string {
+	return fmt.Sprintf("user_%s", ksuid.New().String())
 }
 
 func validateCreateUserRequest(ctx context.Context, req createUserRequest) error {

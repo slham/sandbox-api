@@ -2,14 +2,14 @@ package dao
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/slham/sandbox-api/model"
 )
 
-func InsertUser(ctx context.Context, u model.User) (model.User, error) {
-	err := getDB().QueryRow(
+func InsertUser(ctx context.Context, u model.User) model.User {
+	getDB().QueryRowContext(ctx,
 		`INSERT INTO sandbox.user(
+			id,
 			username,
 			password,
 			email,
@@ -21,13 +21,14 @@ func InsertUser(ctx context.Context, u model.User) (model.User, error) {
 			$2,
 			$3,
 			$4,
-			$5)
-		RETURNING id`,
+			$5,
+			$6
+		)`,
+		u.ID,
 		u.Username,
 		u.Password,
 		u.Email,
 		u.Created,
-		u.Updated).Scan(&u.ID)
-
-	return u, fmt.Errorf("failed to insert user. %w", err)
+		u.Updated)
+	return u
 }

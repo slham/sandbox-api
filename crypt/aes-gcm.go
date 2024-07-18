@@ -8,15 +8,12 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"log"
 )
 
 var key []byte
 
-func Initialize(k string, mode string) bool {
+func Initialize(k string) {
 	key = []byte(k)
-	log.Println("encryption key set")
-	return true
 }
 
 func Encrypt(s string) (string, error) {
