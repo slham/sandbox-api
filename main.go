@@ -45,6 +45,8 @@ func main() {
 
 	// User APIs
 	r.Methods("POST").Path("/users").HandlerFunc(userController.CreateUser)
+	r.Methods("GET").Path("/users").HandlerFunc(userController.GetUsers)
+	r.Methods("GET").Path("/users/{user_id}").HandlerFunc(userController.GetUserByID)
 
 	srv := &http.Server{
 		Addr:         ":8080",

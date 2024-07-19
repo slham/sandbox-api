@@ -7,6 +7,8 @@ import (
 
 var (
 	ApiErrBadRequest = errors.New("bad request")
+	ApiErrNotFound   = errors.New("not found")
+	ApiErrConflict   = errors.New("conflict")
 )
 
 type ApiError struct {
