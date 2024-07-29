@@ -69,7 +69,7 @@ func (c *UserController) createUser(ctx context.Context, req createUserRequest) 
 		return user, fmt.Errorf("failed to encrypt password. %w", err)
 	}
 
-	user.ID = newUserId()
+	user.ID = newUserID()
 	user.Username = req.Username
 	user.Email = req.Email
 	user.Created = time.Now()
@@ -88,10 +88,6 @@ func (c *UserController) createUser(ctx context.Context, req createUserRequest) 
 
 	user.Password = ""
 	return user, nil
-}
-
-func newUserId() string {
-	return fmt.Sprintf("user_%s", ksuid.New().String())
 }
 
 func validateCreateUserRequest(ctx context.Context, req createUserRequest) error {
@@ -114,4 +110,8 @@ func validateCreateUserRequest(ctx context.Context, req createUserRequest) error
 	}
 
 	return nil
+}
+
+func newUserID() string {
+	return fmt.Sprintf("user_%s", ksuid.New().String())
 }

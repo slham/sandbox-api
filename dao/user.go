@@ -16,7 +16,7 @@ var (
 )
 
 func InsertUser(ctx context.Context, u model.User) (model.User, error) {
-	row := getDB().QueryRowContext(ctx,
+	_, err := getDB().ExecContext(ctx,
 		`INSERT INTO sandbox.user(
 			id,
 			username,
@@ -39,7 +39,7 @@ func InsertUser(ctx context.Context, u model.User) (model.User, error) {
 		u.Email,
 		u.Created,
 		u.Updated)
-	if err := row.Err(); err != nil {
+	if err != nil {
 		if pgErr, ok := err.(*pq.Error); ok {
 			if pgErr.Code == "23505" {
 				if strings.Contains(pgErr.Message, "username") {

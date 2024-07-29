@@ -37,6 +37,7 @@ func main() {
 
 	// Controllers
 	userController := handler.NewUserController()
+	workoutController := handler.NewWorkoutController()
 
 	r := mux.NewRouter()
 
@@ -47,6 +48,9 @@ func main() {
 	r.Methods("POST").Path("/users").HandlerFunc(userController.CreateUser)
 	r.Methods("GET").Path("/users").HandlerFunc(userController.GetUsers)
 	r.Methods("GET").Path("/users/{user_id}").HandlerFunc(userController.GetUserByID)
+
+	// Workouts APIs
+	r.Methods("POST").Path("/users/{user_id}/workouts").HandlerFunc(workoutController.CreateWorkout)
 
 	srv := &http.Server{
 		Addr:         ":8080",
