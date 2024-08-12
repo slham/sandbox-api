@@ -177,3 +177,41 @@ func GetUsers(ctx context.Context, q UserQuery) ([]model.User, error) {
 
 	return users, nil
 }
+
+func UpdateUser(ctx context.Context, user model.User) error {
+	_, err := getDB().ExecContext(ctx,
+		`UPDATE sandbox.user 
+		SET username = $1, email = $2, updated = $3
+		WHERE id = $4`,
+		user.Username,
+		user.Email,
+		user.Updated,
+		user.ID)
+	if err != nil {
+		if pgErr, ok := err.(*pq.Error); ok {
+			if pgErr.Code == "23505" {
+				if strings.Contains(pgErr.Message, "username") {
+					return ErrConflictUsername
+				} else if strings.Contains(pgErr.Message, "email") {
+					return ErrConflictEmail
+				}
+				return fmt.Errorf("failed to update user. conflict. %w", err)
+			}
+		}
+		return fmt.Errorf("failed to update user. %w", err)
+	}
+
+	return nil
+}
+
+func DeleteUser(ctx context.Context, id string) error {
+	_, err := getDB().ExecContext(ctx,
+		`DELETE FROM sandbox.user 
+		WHERE id = $1`,
+		id)
+	if err != nil {
+		return fmt.Errorf("failed to delete user. %w", err)
+	}
+
+	return nil
+}

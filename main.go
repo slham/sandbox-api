@@ -48,6 +48,8 @@ func main() {
 	r.Methods("POST").Path("/users").HandlerFunc(userController.CreateUser)
 	r.Methods("GET").Path("/users").HandlerFunc(userController.GetUsers)
 	r.Methods("GET").Path("/users/{user_id}").HandlerFunc(userController.GetUserByID)
+	r.Methods("PATCH").Path("/users/{user_id}").HandlerFunc(userController.UpdateUser)
+	r.Methods("DELETE").Path("/users/{user_id}").HandlerFunc(userController.DeleteUser)
 
 	// Workouts APIs
 	r.Methods("POST").Path("/users/{user_id}/workouts").HandlerFunc(workoutController.CreateWorkout)
