@@ -11,7 +11,7 @@ import (
 	"gopkg.in/go-playground/assert.v1"
 )
 
-func TestCreateUser(t *testing.T) {
+func TestWorkout(t *testing.T) {
 	testCases := []struct {
 		name string
 		req  string
@@ -19,22 +19,22 @@ func TestCreateUser(t *testing.T) {
 		code int
 	}{
 		{
-			name: "happy path",
-			req:  `{"username": "test_user", "password": "thisIsAG00dPassword!", "email": "a@b.c"}`,
-			resp: map[string]string{"username": "test_user", "email": "a@b.c"},
-			code: http.StatusCreated,
-		},
-		{
 			name: "fail validations",
 			req:  `{"username": "bad", "password": "bad", "email": "bad"}`,
 			resp: map[string]string{"errors": "failed to validate create user request. username must be at leat four characters long. password must be at least 8 characters long and contain at least one number, one special character, one upper case character, and one lower case character. invalid email"},
 			code: http.StatusBadRequest,
 		},
+		{
+			name: "happy path",
+			req:  `{"username": "test_user", "password": "thisIsAG00dPassword!", "email": "a@b.c"}`,
+			resp: map[string]string{"username": "test_user", "email": "a@b.c"},
+			code: http.StatusCreated,
+		},
 	}
 
 	for _, tc := range testCases {
 		bodyReader := bytes.NewReader([]byte(tc.req))
-		url := "http://localhost:8080/users"
+		url := "http://localhost:8080/workouts"
 		req, err := http.NewRequest(http.MethodPost, url, bodyReader)
 		if err != nil {
 			t.Log(err)

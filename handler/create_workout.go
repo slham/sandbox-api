@@ -65,6 +65,14 @@ func (c *WorkoutController) createWorkout(ctx context.Context, workout model.Wor
 	workout.Created = time.Now()
 	workout.Updated = time.Now()
 
+	workout, err := dao.InsertWorkout(ctx, workout)
+	if err != nil {
+		if errors.Is(err, dao.ErrConflictWorkoutName) {
+			return workout, NewApiError(409, ApiErrConflict).Append("workout name already exists")
+		}
+		return workout, fmt.Errorf("failed to insert workout. %w", err)
+	}
+
 	return workout, nil
 }
 
