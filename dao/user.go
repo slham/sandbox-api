@@ -156,6 +156,8 @@ func GetUsers(ctx context.Context, q UserQuery) ([]model.User, error) {
 	}
 
 	users := []model.User{}
+	fmt.Println(q)
+	fmt.Println(stmt)
 	rows, err := getDB().QueryContext(ctx, stmt)
 	if err != nil {
 		return users, fmt.Errorf("failed to query users. %w", err)

@@ -24,6 +24,7 @@ type updateUserRequest struct {
 }
 
 func (c *UserController) UpdateUser(w http.ResponseWriter, r *http.Request) {
+	slog.Debug("update user request")
 	ctx := r.Context()
 	req := updateUserRequest{}
 	vars := mux.Vars(r)

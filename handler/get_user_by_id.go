@@ -19,6 +19,7 @@ type getUserRequest struct {
 }
 
 func (c *UserController) GetUserByID(w http.ResponseWriter, r *http.Request) {
+	slog.Debug("get user by id request")
 	ctx := r.Context()
 	vars := mux.Vars(r)
 	userID := vars["user_id"]

@@ -24,6 +24,7 @@ type createUserRequest struct {
 }
 
 func (c *UserController) CreateUser(w http.ResponseWriter, r *http.Request) {
+	slog.Debug("create user request")
 	ctx := r.Context()
 	req := createUserRequest{}
 

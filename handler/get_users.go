@@ -16,6 +16,7 @@ import (
 )
 
 func (c *UserController) GetUsers(w http.ResponseWriter, r *http.Request) {
+	slog.Debug("get users request")
 	ctx := r.Context()
 	query := r.URL.Query()
 

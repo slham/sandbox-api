@@ -14,6 +14,7 @@ import (
 )
 
 func (c *UserController) DeleteUser(w http.ResponseWriter, r *http.Request) {
+	slog.Debug("delete user request")
 	ctx := r.Context()
 	vars := mux.Vars(r)
 	userID := vars["user_id"]
