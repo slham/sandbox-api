@@ -14,12 +14,13 @@ import (
 
 func TestUser(t *testing.T) {
 	testCases := []struct {
-		name   string
-		req    string
-		method string
-		url    string
-		resp   map[string]string
-		code   int
+		name    string
+		req     string
+		method  string
+		url     string
+		resp    map[string]string
+		code    int
+		comment string
 	}{
 		{
 			name:   "create fail validations",
@@ -46,6 +47,14 @@ func TestUser(t *testing.T) {
 			code:   http.StatusCreated,
 		},
 		{
+			name:   "create happy path 3",
+			method: "POST",
+			url:    "/users",
+			req:    `{"username": "test_user_3", "password": "thisIsAG00dPassword!", "email": "f@g.h"}`,
+			resp:   map[string]string{"username": "test_user_3", "email": "f@g.h"},
+			code:   http.StatusCreated,
+		},
+		{
 			name:   "create fail username conflict",
 			method: "POST",
 			url:    "/users",
@@ -57,7 +66,7 @@ func TestUser(t *testing.T) {
 			name:   "create fail email conflict",
 			method: "POST",
 			url:    "/users",
-			req:    `{"username": "test_user_3", "password": "thisIsAG00dPassword!", "email": "c@d.e"}`,
+			req:    `{"username": "test_user_4", "password": "thisIsAG00dPassword!", "email": "c@d.e"}`,
 			resp:   map[string]string{"errors": "email already exists"},
 			code:   http.StatusConflict,
 		},
@@ -81,7 +90,7 @@ func TestUser(t *testing.T) {
 			name:   "update fail email conflict",
 			method: "PATCH",
 			url:    "/users/%s",
-			req:    `{"username": "test_user_3", "email": "c@d.e"}`,
+			req:    `{"username": "test_user_4", "email": "f@g.h"}`,
 			resp:   map[string]string{"errors": "email already exists"},
 			code:   http.StatusConflict,
 		},
@@ -89,8 +98,8 @@ func TestUser(t *testing.T) {
 			name:   "update happy path",
 			method: "PATCH",
 			url:    "/users/%s",
-			req:    `{"username": "test_user_3", "password": "thisIsAG00dPassword!", "email": "f@g.h"}`,
-			resp:   map[string]string{"username": "test_user", "email": "a@b.c"},
+			req:    `{"username": "test_user_4", "password": "thisIsAG00dPassword!", "email": "i@j.k"}`,
+			resp:   map[string]string{"username": "test_user_4", "email": "i@j.k"},
 			code:   http.StatusOK,
 		},
 		{
@@ -100,6 +109,14 @@ func TestUser(t *testing.T) {
 			resp:   map[string]string{},
 			code:   http.StatusNoContent,
 		},
+		{
+			name:    "get all happy path",
+			method:  "GET",
+			url:     "/users",
+			resp:    map[string]string{},
+			code:    http.StatusOK,
+			comment: "clean up test data",
+		},
 	}
 
 	userIDs := []string{}
@@ -107,7 +124,7 @@ func TestUser(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			fmt.Println("name", tc.name, "userIDs", userIDs)
 			bodyReader := bytes.NewReader([]byte(tc.req))
-			if tc.method != "POST" {
+			if tc.method == "PATCH" || tc.method == "DELETE" {
 				tc.url = fmt.Sprintf(tc.url, userIDs[0])
 			}
 			url := fmt.Sprintf("http://localhost:8080%s", tc.url)
@@ -129,13 +146,41 @@ func TestUser(t *testing.T) {
 			assert.Equal(t, resp.StatusCode, tc.code)
 
 			if resp.StatusCode == http.StatusNoContent {
-				continue
+				t.Skipf("skipping test success")
 			}
 
 			bodyBytes, err := io.ReadAll(resp.Body)
 			if err != nil {
 				t.Log(err)
 				t.Fail()
+			}
+
+			if tc.method == "GET" {
+				usersList := []map[string]string{}
+				err = json.Unmarshal(bodyBytes, &usersList)
+				if err != nil {
+					t.Log(err)
+					t.Fail()
+				}
+
+				for _, user := range usersList {
+					u := fmt.Sprintf("http://localhost:8080/users/%s", user["id"])
+					rq, err := http.NewRequest("DELETE", u, nil)
+					if err != nil {
+						t.Log(err)
+						t.Fail()
+					}
+					rq.Header.Set("Content-Type", "application/json")
+					resp, err := client.Do(rq)
+					if err != nil {
+						t.Log(err)
+						t.Fail()
+					}
+
+					assert.Equal(t, resp.StatusCode, http.StatusNoContent)
+				}
+
+				t.Skipf("skipping test success")
 			}
 
 			respMap := map[string]string{}

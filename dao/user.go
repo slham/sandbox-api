@@ -60,18 +60,8 @@ type UserQuery struct {
 	ID           string
 	Username     string
 	Email        string
-	Sort         string
-	SortCol      string
-	Limit        int
-	Offset       int
 	HidePassword bool
-}
-
-func checkWhereClause(stmt string) string {
-	if !strings.HasSuffix(stmt, "WHERE") {
-		return fmt.Sprintf("%s AND", stmt)
-	}
-	return stmt
+	Query
 }
 
 func GetUserByEmail(ctx context.Context, email string) (model.User, error) {
@@ -120,19 +110,21 @@ func GetUsers(ctx context.Context, q UserQuery) ([]model.User, error) {
 			created,
 			updated
 		FROM
-			sandbox.user
-		WHERE`
+			sandbox.user`
 
-	if q.ID != "" {
-		stmt = fmt.Sprintf("%s %s='%s'", stmt, "id", q.ID)
-	}
-	if q.Username != "" {
-		stmt = checkWhereClause(stmt)
-		stmt = fmt.Sprintf("%s %s='%s'", stmt, "username", q.Username)
-	}
-	if q.Email != "" {
-		stmt = checkWhereClause(stmt)
-		stmt = fmt.Sprintf("%s %s='%s'", stmt, "email", q.Email)
+	if q.ID != "" || q.Username != "" || q.Email != "" {
+		stmt = fmt.Sprintf("%s %s", stmt, "WHERE")
+		if q.ID != "" {
+			stmt = fmt.Sprintf("%s %s='%s'", stmt, "id", q.ID)
+		}
+		if q.Username != "" {
+			stmt = checkWhereClause(stmt)
+			stmt = fmt.Sprintf("%s %s='%s'", stmt, "username", q.Username)
+		}
+		if q.Email != "" {
+			stmt = checkWhereClause(stmt)
+			stmt = fmt.Sprintf("%s %s='%s'", stmt, "email", q.Email)
+		}
 	}
 	if q.SortCol != "" {
 		stmt = fmt.Sprintf("%s ORDER BY %s", stmt, q.SortCol)
@@ -156,8 +148,6 @@ func GetUsers(ctx context.Context, q UserQuery) ([]model.User, error) {
 	}
 
 	users := []model.User{}
-	fmt.Println(q)
-	fmt.Println(stmt)
 	rows, err := getDB().QueryContext(ctx, stmt)
 	if err != nil {
 		return users, fmt.Errorf("failed to query users. %w", err)

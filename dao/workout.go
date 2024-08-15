@@ -51,3 +51,97 @@ func InsertWorkout(ctx context.Context, workout model.Workout) (model.Workout, e
 	}
 	return workout, nil
 }
+
+type WorkoutQuery struct {
+	ID     string
+	UserID string
+	Query
+}
+
+func GetWorkoutByUserID(ctx context.Context, userID string) (model.Workout, error) {
+	q := WorkoutQuery{UserID: userID}
+	w, err := GetWorkout(ctx, q)
+	if err != nil {
+		return model.Workout{}, fmt.Errorf("failed to get workout by user id. %w", err)
+	}
+	return w, nil
+}
+
+func GetWorkoutByID(ctx context.Context, id string) (model.Workout, error) {
+	q := WorkoutQuery{ID: id}
+	w, err := GetWorkout(ctx, q)
+	if err != nil {
+		return model.Workout{}, fmt.Errorf("failed to get workout by id. %w", err)
+	}
+	return w, nil
+}
+
+func GetWorkout(ctx context.Context, q WorkoutQuery) (model.Workout, error) {
+	workouts, err := GetWorkouts(ctx, q)
+	if err != nil {
+		return model.Workout{}, fmt.Errorf("failed to get workouts. %w", err)
+	}
+
+	return workouts[0], nil
+}
+
+func GetWorkouts(ctx context.Context, q WorkoutQuery) ([]model.Workout, error) {
+	stmt := `
+		SELECT
+			id,
+			name,
+			user_id,
+			exercises,
+			created,
+			updated
+		FROM
+			sandbox.workout
+		WHERE`
+
+	if q.ID != "" {
+		stmt = fmt.Sprintf("%s %s='%s'", stmt, "id", q.ID)
+	}
+	if q.UserID != "" {
+		stmt = checkWhereClause(stmt)
+		stmt = fmt.Sprintf("%s %s='%s'", stmt, "user_id", q.UserID)
+	}
+	if q.SortCol != "" {
+		stmt = fmt.Sprintf("%s ORDER BY %s", stmt, q.SortCol)
+	} else {
+		stmt = fmt.Sprintf("%s ORDER BY id", stmt)
+	}
+	if q.Sort != "" {
+		stmt = fmt.Sprintf("%s %s", stmt, q.Sort)
+	} else {
+		stmt = fmt.Sprintf("%s ASC", stmt)
+	}
+	if q.Limit > 0 {
+		stmt = fmt.Sprintf("%s LIMIT %d", stmt, q.Limit)
+	} else {
+		stmt = fmt.Sprintf("%s LIMIT 100", stmt)
+	}
+	if q.Offset > 0 {
+		stmt = fmt.Sprintf("%s OFFSET %d", stmt, q.Offset)
+	} else {
+		stmt = fmt.Sprintf("%s OFFSET 0", stmt)
+	}
+
+	workouts := []model.Workout{}
+	rows, err := getDB().QueryContext(ctx, stmt)
+	if err != nil {
+		return workouts, fmt.Errorf("failed to query users. %w", err)
+	}
+
+	defer rows.Close()
+
+	for rows.Next() {
+		var w model.Workout
+		if err := rows.Scan(&w.ID, &w.Name, &w.UserID, &w.Exercises, &w.Created, &w.Updated); err != nil {
+			return workouts, fmt.Errorf("failed to scan. %w", err)
+		}
+
+		workouts = append(workouts, w)
+	}
+
+	return workouts, nil
+}
