@@ -122,7 +122,6 @@ func TestUser(t *testing.T) {
 	userIDs := []string{}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			fmt.Println("name", tc.name, "userIDs", userIDs)
 			bodyReader := bytes.NewReader([]byte(tc.req))
 			if tc.method == "PATCH" || tc.method == "DELETE" {
 				tc.url = fmt.Sprintf(tc.url, userIDs[0])

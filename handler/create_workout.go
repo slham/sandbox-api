@@ -54,6 +54,7 @@ func (c *WorkoutController) CreateWorkout(w http.ResponseWriter, r *http.Request
 }
 
 func (c *WorkoutController) createWorkout(ctx context.Context, workout model.Workout) (model.Workout, error) {
+	slog.Debug("createWorkout", "userID", workout.UserID)
 	if _, err := dao.GetUserByID(ctx, workout.UserID); err != nil {
 		return workout, NewApiError(404, ApiErrNotFound).Append("user does not exist")
 	}
