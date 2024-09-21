@@ -145,3 +145,39 @@ func GetWorkouts(ctx context.Context, q WorkoutQuery) ([]model.Workout, error) {
 
 	return workouts, nil
 }
+
+func UpdateWorkout(ctx context.Context, workout model.Workout) error {
+	_, err := getDB().ExecContext(ctx,
+		`UPDATE sandbox.workout
+	SET name = $1, exercises = $2, updated = $3
+	WHERE id = $4`,
+		workout.Name,
+		workout.Exercises,
+		workout.Updated,
+		workout.ID)
+	if err != nil {
+		if pgErr, ok := err.(*pq.Error); ok {
+			if pgErr.Code == "23505" {
+				if strings.Contains(pgErr.Message, "u_user_name") {
+					return ErrConflictWorkoutName
+				}
+				return fmt.Errorf("failed to update workout. conflict. %w", err)
+			}
+		}
+		return fmt.Errorf("failed to update workout. %w", err)
+	}
+
+	return nil
+}
+
+func DeleteWorkout(ctx context.Context, id string) error {
+	_, err := getDB().ExecContext(ctx,
+		`DELETE FROM sandbox.workout
+		WHERE id = $1`,
+		id)
+	if err != nil {
+		return fmt.Errorf("failed to delete workout. %w", err)
+	}
+
+	return nil
+}

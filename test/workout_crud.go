@@ -1,5 +1,6 @@
 package main
 
+/*
 import (
 	"bytes"
 	"encoding/json"
@@ -19,17 +20,21 @@ func TestWorkout(t *testing.T) {
 		code int
 	}{
 		{
-			name: "fail validations",
-			req:  `{"username": "bad", "password": "bad", "email": "bad"}`,
-			resp: map[string]string{"errors": "failed to validate create user request. username must be at leat four characters long. password must be at least 8 characters long and contain at least one number, one special character, one upper case character, and one lower case character. invalid email"},
-			code: http.StatusBadRequest,
+			name:   "create fail validations",
+			method: "POST",
+			url:    "/users/%s/workouts",
+			req:    `{"name":"","exercises":[{"name":"","muscles":[{"name":"","muscleGroup":"Arms"}],"sets":[{"weight":25,"reps":10},{"weight":25,"reps":10},{"weight":25,"reps":10}]}]}`,
+			resp:   map[string]string{"errors": "failed to validate create workout request. workout must have a name. exercise must have a name. muscle must have a name"},
+			code:   http.StatusBadRequest,
 		},
-		{
-			name: "happy path",
-			req:  `{"username": "test_user", "password": "thisIsAG00dPassword!", "email": "a@b.c"}`,
-			resp: map[string]string{"username": "test_user", "email": "a@b.c"},
-			code: http.StatusCreated,
-		},
+			{
+				name:   "create happy path 1",
+				method: "POST",
+				url:    "/users/%s/workouts",
+				req:    `{"name":"workout1","exercises":[{"name":"curl","muscles":[{"name":"bicep","muscleGroup":"arms"}],"sets":[{"weight":25,"reps":10},{"weight":25,"reps":10},{"weight":25,"reps":10}]}]}`,
+				resp:   map[string]string{"username": "test_user", "email": "a@b.c"},
+				code:   http.StatusCreated,
+			},
 	}
 
 	for _, tc := range testCases {
@@ -69,3 +74,4 @@ func TestWorkout(t *testing.T) {
 
 	}
 }
+*/

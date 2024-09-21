@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
+	"github.com/samber/lo"
 	"github.com/segmentio/ksuid"
 	"github.com/slham/sandbox-api/dao"
 	"github.com/slham/sandbox-api/model"
@@ -91,6 +92,9 @@ func validateCreateWorkoutRequest(ctx context.Context, workout model.Workout) er
 		for _, muscle := range exercise.Muscles {
 			if muscle.Name == "" {
 				apiErr = apiErr.Append("muscle must have a name")
+			}
+			if !lo.Contains(model.MuscleGroups, model.MuscleGroup(muscle.MuscleGroup)) {
+				apiErr = apiErr.Append(fmt.Sprintf("invalid muscle group. valid options: %v", model.MuscleGroups))
 			}
 		}
 	}

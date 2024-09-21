@@ -36,13 +36,13 @@ type Muscle struct {
 }
 
 const (
-	Arms      MuscleGroup = "Arms"
-	Back      MuscleGroup = "Back"
-	Chest     MuscleGroup = "Chest"
-	Core      MuscleGroup = "Core"
-	Heart     MuscleGroup = "Heart"
-	Legs      MuscleGroup = "Legs"
-	Shoulders MuscleGroup = "Shoulders"
+	Arms      MuscleGroup = "arms"
+	Back      MuscleGroup = "back"
+	Chest     MuscleGroup = "chest"
+	Core      MuscleGroup = "core"
+	Heart     MuscleGroup = "heart"
+	Legs      MuscleGroup = "legs"
+	Shoulders MuscleGroup = "shoulders"
 )
 
 type Set struct {
