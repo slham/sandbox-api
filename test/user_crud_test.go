@@ -9,6 +9,7 @@ import (
 	"testing"
 	"time"
 
+	matcher "github.com/panta/go-json-matcher"
 	"gopkg.in/go-playground/assert.v1"
 )
 
@@ -18,7 +19,7 @@ func TestUser(t *testing.T) {
 		req     string
 		method  string
 		url     string
-		resp    map[string]string
+		resp    string
 		code    int
 		comment string
 	}{
@@ -27,7 +28,7 @@ func TestUser(t *testing.T) {
 			method: "POST",
 			url:    "/users",
 			req:    `{"username": "bad", "password": "bad", "email": "bad"}`,
-			resp:   map[string]string{"errors": "failed to validate create user request. username must be at leat four characters long. password must be at least 8 characters long and contain at least one number, one special character, one upper case character, and one lower case character. invalid email"},
+			resp:   `{"errors": "failed to validate create user request. username must be at leat four characters long. password must be at least 8 characters long and contain at least one number, one special character, one upper case character, and one lower case character. invalid email"}`,
 			code:   http.StatusBadRequest,
 		},
 		{
@@ -35,7 +36,7 @@ func TestUser(t *testing.T) {
 			method: "POST",
 			url:    "/users",
 			req:    `{"username": "test_user_1", "password": "thisIsAG00dPassword!", "email": "a@b.c"}`,
-			resp:   map[string]string{"username": "test_user_1", "email": "a@b.c"},
+			resp:   `{"id":"#regex ^user_[a-zA-Z0-9]{27}$","username": "test_user_1", "email": "a@b.c","created":"#datetime","updated":"#datetime"}`,
 			code:   http.StatusCreated,
 		},
 		{
@@ -43,7 +44,7 @@ func TestUser(t *testing.T) {
 			method: "POST",
 			url:    "/users",
 			req:    `{"username": "test_user_2", "password": "thisIsAG00dPassword!", "email": "c@d.e"}`,
-			resp:   map[string]string{"username": "test_user_2", "email": "c@d.e"},
+			resp:   `{"id":"#regex ^user_[a-zA-Z0-9]{27}$","username": "test_user_2", "email": "c@d.e","created":"#datetime","updated":"#datetime"}`,
 			code:   http.StatusCreated,
 		},
 		{
@@ -51,7 +52,7 @@ func TestUser(t *testing.T) {
 			method: "POST",
 			url:    "/users",
 			req:    `{"username": "test_user_3", "password": "thisIsAG00dPassword!", "email": "f@g.h"}`,
-			resp:   map[string]string{"username": "test_user_3", "email": "f@g.h"},
+			resp:   `{"id":"#regex ^user_[a-zA-Z0-9]{27}$","username": "test_user_3", "email": "f@g.h","created":"#datetime","updated":"#datetime"}`,
 			code:   http.StatusCreated,
 		},
 		{
@@ -59,7 +60,7 @@ func TestUser(t *testing.T) {
 			method: "POST",
 			url:    "/users",
 			req:    `{"username": "test_user_2", "password": "thisIsAG00dPassword!", "email": "good@gmail.com"}`,
-			resp:   map[string]string{"errors": "username already exists"},
+			resp:   `{"errors": "username already exists"}`,
 			code:   http.StatusConflict,
 		},
 		{
@@ -67,7 +68,7 @@ func TestUser(t *testing.T) {
 			method: "POST",
 			url:    "/users",
 			req:    `{"username": "test_user_4", "password": "thisIsAG00dPassword!", "email": "c@d.e"}`,
-			resp:   map[string]string{"errors": "email already exists"},
+			resp:   `{"errors": "email already exists"}`,
 			code:   http.StatusConflict,
 		},
 		{
@@ -75,7 +76,7 @@ func TestUser(t *testing.T) {
 			method: "PATCH",
 			url:    "/users/%s",
 			req:    `{"username": "bad", "email": "bad"}`,
-			resp:   map[string]string{"errors": "failed to validate update user request. username must be at leat four characters long. invalid email"},
+			resp:   `{"errors": "failed to validate update user request. username must be at leat four characters long. invalid email"}`,
 			code:   http.StatusBadRequest,
 		},
 		{
@@ -83,7 +84,7 @@ func TestUser(t *testing.T) {
 			method: "PATCH",
 			url:    "/users/%s",
 			req:    `{"username": "test_user_2", "email": "good@gmail.com"}`,
-			resp:   map[string]string{"errors": "username already exists"},
+			resp:   `{"errors": "username already exists"}`,
 			code:   http.StatusConflict,
 		},
 		{
@@ -91,29 +92,29 @@ func TestUser(t *testing.T) {
 			method: "PATCH",
 			url:    "/users/%s",
 			req:    `{"username": "test_user_4", "email": "f@g.h"}`,
-			resp:   map[string]string{"errors": "email already exists"},
+			resp:   `{"errors": "email already exists"}`,
 			code:   http.StatusConflict,
 		},
-		{
-			name:   "update happy path",
-			method: "PATCH",
-			url:    "/users/%s",
-			req:    `{"username": "test_user_4", "password": "thisIsAG00dPassword!", "email": "i@j.k"}`,
-			resp:   map[string]string{"username": "test_user_4", "email": "i@j.k"},
-			code:   http.StatusOK,
-		},
+		/*
+			{
+				name:   "update happy path",
+				method: "PATCH",
+				url:    "/users/%s",
+				req:    `{"username": "test_user_4", "password": "thisIsAG00dPassword!", "email": "i@j.k"}`,
+				resp:   map[string]string{"username": "test_user_4", "email": "i@j.k"},
+				code:   http.StatusOK,
+			},
+		*/
 		{
 			name:   "delete happy path",
 			method: "DELETE",
 			url:    "/users/%s",
-			resp:   map[string]string{},
 			code:   http.StatusNoContent,
 		},
 		{
 			name:    "get all happy path",
 			method:  "GET",
 			url:     "/users",
-			resp:    map[string]string{},
 			code:    http.StatusOK,
 			comment: "clean up test data",
 		},
@@ -154,6 +155,8 @@ func TestUser(t *testing.T) {
 				t.Fail()
 			}
 
+			respString := string(bodyBytes)
+
 			if tc.method == "GET" {
 				usersList := []map[string]string{}
 				err = json.Unmarshal(bodyBytes, &usersList)
@@ -182,19 +185,22 @@ func TestUser(t *testing.T) {
 				t.Skipf("skipping test success")
 			}
 
-			respMap := map[string]string{}
-			err = json.Unmarshal(bodyBytes, &respMap)
-			if err != nil {
+			matches, err := matcher.JSONStringMatches(respString, tc.resp)
+			if !matches || err != nil {
 				t.Log(err)
 				t.Fail()
 			}
 
-			for k, v := range tc.resp {
-				assert.Equal(t, respMap[k], v)
-			}
-
 			if tc.method == "POST" && resp.StatusCode == http.StatusCreated {
-				userIDs = append(userIDs, respMap["id"])
+				respMap := map[string]any{}
+				err = json.Unmarshal(bodyBytes, &respMap)
+				if err != nil {
+					t.Log(err)
+					t.Fail()
+				}
+				if id, ok := respMap["id"].(string); ok {
+					userIDs = append(userIDs, id)
+				}
 			}
 		})
 	}

@@ -123,7 +123,8 @@ func TestWorkout(t *testing.T) {
 		assert.Equal(t, resp.StatusCode, tc.code)
 
 		if resp.StatusCode == http.StatusNoContent {
-			t.Skipf("skipping test success")
+			t.Logf("skipping test success")
+			continue
 		}
 
 		bodyBytes, err := io.ReadAll(resp.Body)
@@ -159,7 +160,8 @@ func TestWorkout(t *testing.T) {
 				assert.Equal(t, resp.StatusCode, http.StatusNoContent)
 			}
 
-			t.Skipf("skipping test success")
+			t.Logf("skipping test success")
+			continue
 		}
 
 		matches, err := matcher.JSONStringMatches(respString, tc.resp)
@@ -181,7 +183,6 @@ func TestWorkout(t *testing.T) {
 		}
 	}
 
-	deleteTestUser(t, userID)
 }
 
 func createTestUser(t *testing.T) string {
@@ -210,6 +211,7 @@ func createTestUser(t *testing.T) string {
 	}
 
 	respMap := map[string]string{}
+	t.Logf("respMap: %+v", respMap)
 	err = json.Unmarshal(bodyBytes, &respMap)
 	if err != nil {
 		t.Log(err)

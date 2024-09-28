@@ -30,7 +30,7 @@ func handleGetWorkoutError(w http.ResponseWriter, err error) {
 }
 
 func (c *WorkoutController) GetWorkout(w http.ResponseWriter, r *http.Request) {
-	slog.Debug("get user by id request")
+	slog.Debug("get workout by id request")
 	ctx := r.Context()
 	vars := mux.Vars(r)
 	userID := vars["user_id"]
@@ -53,7 +53,7 @@ func (c *WorkoutController) getWorkoutByID(ctx context.Context, req getWorkoutRe
 		if errors.Is(err, sql.ErrNoRows) {
 			return workout, NewApiError(404, ApiErrNotFound)
 		}
-		return workout, fmt.Errorf("failed to get user by id. %w", err)
+		return workout, fmt.Errorf("failed to get workout by id. %w", err)
 	}
 	return workout, nil
 }
