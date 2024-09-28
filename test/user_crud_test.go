@@ -95,16 +95,14 @@ func TestUser(t *testing.T) {
 			resp:   `{"errors": "email already exists"}`,
 			code:   http.StatusConflict,
 		},
-		/*
-			{
-				name:   "update happy path",
-				method: "PATCH",
-				url:    "/users/%s",
-				req:    `{"username": "test_user_4", "password": "thisIsAG00dPassword!", "email": "i@j.k"}`,
-				resp:   map[string]string{"username": "test_user_4", "email": "i@j.k"},
-				code:   http.StatusOK,
-			},
-		*/
+		{
+			name:   "update happy path",
+			method: "PATCH",
+			url:    "/users/%s",
+			req:    `{"username": "test_user_4", "password": "thisIsAG00dPassword!", "email": "i@j.k"}`,
+			resp:   `{"id":"#regex ^user_[a-zA-Z0-9]{27}$","username": "test_user_4", "email": "i@j.k","created":"#datetime","updated":"#datetime"}`,
+			code:   http.StatusOK,
+		},
 		{
 			name:   "delete happy path",
 			method: "DELETE",
