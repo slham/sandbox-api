@@ -13,16 +13,27 @@ import (
 	"github.com/slham/sandbox-api/request"
 )
 
+type deleteUserRequest struct {
+	UserID string
+}
+
+func handleDeleteUserError(w http.ResponseWriter, err error) {
+	slog.Error("error deleting user", "err", err)
+	request.RespondWithError(w, http.StatusInternalServerError, "internal server error")
+	return
+}
+
 func (c *UserController) DeleteUser(w http.ResponseWriter, r *http.Request) {
 	slog.Debug("delete user request")
 	ctx := r.Context()
 	vars := mux.Vars(r)
 	userID := vars["user_id"]
 
-	err := c.deleteUser(ctx, userID)
+	req := deleteUserRequest{UserID: userID}
+
+	err := c.deleteUser(ctx, req)
 	if err != nil {
-		slog.Error("error deleting user", "err", err)
-		request.RespondWithError(w, http.StatusInternalServerError, "internal server error")
+		handleDeleteWorkoutError(w, err)
 		return
 	}
 
@@ -30,8 +41,8 @@ func (c *UserController) DeleteUser(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
-func (c *UserController) deleteUser(ctx context.Context, userID string) error {
-	_, err := c.getUserByID(ctx, getUserRequest{ID: userID})
+func (c *UserController) deleteUser(ctx context.Context, req deleteUserRequest) error {
+	_, err := c.getUserByID(ctx, getUserRequest{ID: req.UserID})
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return NewApiError(404, ApiErrNotFound)
@@ -39,7 +50,7 @@ func (c *UserController) deleteUser(ctx context.Context, userID string) error {
 		return fmt.Errorf("failed to delete user. %w", err)
 	}
 
-	err = dao.DeleteUser(ctx, userID)
+	err = dao.DeleteUser(ctx, req.UserID)
 	if err != nil {
 		return fmt.Errorf("failed to delete user. %w", err)
 	}

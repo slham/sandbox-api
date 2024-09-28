@@ -67,8 +67,8 @@ func GetWorkoutByUserID(ctx context.Context, userID string) (model.Workout, erro
 	return w, nil
 }
 
-func GetWorkoutByID(ctx context.Context, id string) (model.Workout, error) {
-	q := WorkoutQuery{ID: id}
+func GetWorkoutByID(ctx context.Context, userID string, workoutID string) (model.Workout, error) {
+	q := WorkoutQuery{ID: workoutID, UserID: userID}
 	w, err := GetWorkout(ctx, q)
 	if err != nil {
 		return model.Workout{}, fmt.Errorf("failed to get workout by id. %w", err)
@@ -149,8 +149,8 @@ func GetWorkouts(ctx context.Context, q WorkoutQuery) ([]model.Workout, error) {
 func UpdateWorkout(ctx context.Context, workout model.Workout) error {
 	_, err := getDB().ExecContext(ctx,
 		`UPDATE sandbox.workout
-	SET name = $1, exercises = $2, updated = $3
-	WHERE id = $4`,
+		SET name = $1, exercises = $2, updated = $3
+		WHERE id = $4`,
 		workout.Name,
 		workout.Exercises,
 		workout.Updated,
@@ -170,11 +170,11 @@ func UpdateWorkout(ctx context.Context, workout model.Workout) error {
 	return nil
 }
 
-func DeleteWorkout(ctx context.Context, id string) error {
+func DeleteWorkout(ctx context.Context, userID string, workoutID string) error {
 	_, err := getDB().ExecContext(ctx,
 		`DELETE FROM sandbox.workout
-		WHERE id = $1`,
-		id)
+		WHERE user_id = $1 AND id = $2`,
+		userID, workoutID)
 	if err != nil {
 		return fmt.Errorf("failed to delete workout. %w", err)
 	}

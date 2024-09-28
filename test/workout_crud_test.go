@@ -9,6 +9,7 @@ import (
 	"testing"
 	"time"
 
+	matcher "github.com/panta/go-json-matcher"
 	"gopkg.in/go-playground/assert.v1"
 )
 
@@ -18,7 +19,7 @@ func TestWorkout(t *testing.T) {
 		req     string
 		method  string
 		url     string
-		resp    map[string]string
+		resp    string
 		code    int
 		comment string
 	}{
@@ -27,74 +28,72 @@ func TestWorkout(t *testing.T) {
 			method: "POST",
 			url:    "/workouts",
 			req:    `{"name":"","exercises":[{"name":"","muscles":[{"name":"","muscleGroup":"Arms"}],"sets":[{"weight":25,"reps":10},{"weight":25,"reps":10},{"weight":25,"reps":10}]}]}`,
-			resp:   map[string]string{"errors": "failed to validate create workout request. workout must have a name. exercise must have a name. muscle must have a name. invalid muscle group. valid options: [arms back chest core heart legs shoulders]"},
+			resp:   `{"errors": "failed to validate create workout request. workout must have a name. exercise must have a name. muscle must have a name. invalid muscle group. valid options: [arms back chest core heart legs shoulders]"}`,
 			code:   http.StatusBadRequest,
+		},
+		{
+			name:   "create happy path 1",
+			method: "POST",
+			url:    "/workouts",
+			req:    `{"name":"Arms Light","exercises":[{"name":"Curl","muscles":[{"name":"Bicep","muscleGroup":"arms"}],"sets":[{"weight":25,"reps":10},{"weight":25,"reps":10},{"weight":25,"reps":10}]}]}`,
+			resp:   `{"id":"#regex ^work_[a-zA-Z0-9]{27}$","name":"Arms Light","user_id":"#regex ^user_[a-zA-Z0-9]{27}$","created":"#datetime","updated":"#datetime","exercises":[{"name":"Curl","muscles":[{"name":"Bicep","muscleGroup":"arms"}],"sets":[{"weight":25,"reps":10},{"weight":25,"reps":10},{"weight":25,"reps":10}]}]}`,
+			code:   http.StatusCreated,
+		},
+		{
+			name:   "create happy path 2",
+			method: "POST",
+			url:    "/workouts",
+			req:    `{"name":"Arms Heavy","exercises":[{"name":"Curl","muscles":[{"name":"Bicep","muscleGroup":"arms"}],"sets":[{"weight":45,"reps":10},{"weight":45,"reps":10},{"weight":45,"reps":10}]}]}`,
+			resp:   `{"id":"#regex ^work_[a-zA-Z0-9]{27}$","name":"Arms Heavy","user_id":"#regex ^user_[a-zA-Z0-9]{27}$","created":"#datetime","updated":"#datetime","exercises":[{"name":"Curl","muscles":[{"name":"Bicep","muscleGroup":"arms"}],"sets":[{"weight":45,"reps":10},{"weight":45,"reps":10},{"weight":45,"reps":10}]}]}`,
+			code:   http.StatusCreated,
+		},
+		{
+			name:   "create fail conflict name",
+			method: "POST",
+			url:    "/workouts",
+			req:    `{"name":"Arms Heavy","exercises":[{"name":"Curl","muscles":[{"name":"Bicep","muscleGroup":"arms"}],"sets":[{"weight":45,"reps":10},{"weight":45,"reps":10},{"weight":45,"reps":10}]}]}`,
+			resp:   `{"errors": "workout name already exists"}`,
+			code:   http.StatusConflict,
 		},
 		/*
 			{
-				name:   "create happy path 1",
-				method: "POST",
-				url:    "/workouts",
-				req:    `{"name":"Arms Light","exercises":[{"name":"Curl","muscles":[{"name":"Bicep","muscleGroup":"arms"}],"sets":[{"weight":25,"reps":10},{"weight":25,"reps":10},{"weight":25,"reps":10}]}]}`,
-				resp:   map[string]string{"name": "Arms Light"},
-				code:   http.StatusCreated,
+				name:   "update fail validations",
+				method: "PATCH",
+				url:    "/workouts/%s",
+				req:    `{"name":"","exercises":[{"name":"","muscles":[{"name":"","muscleGroup":"Arms"}],"sets":[{"weight":25,"reps":10},{"weight":25,"reps":10},{"weight":25,"reps":10}]}]}`,
+				resp:   map[string]string{"errors": "failed to validate create workout request. workout must have a name. exercise must have a name. muscle must have a name"},
+				code:   http.StatusBadRequest,
 			},
 			{
-				name:   "create happy path 2",
-				method: "POST",
-				url:    "/workouts",
-				req:    `{"name":"Arms Heavy","exercises":[{"name":"Curl","muscles":[{"name":"Bicep","muscleGroup":"arms"}],"sets":[{"weight":45,"reps":10},{"weight":45,"reps":10},{"weight":45,"reps":10}]}]}`,
-				resp:   map[string]string{"name": "Arms Heavy"},
-				code:   http.StatusCreated,
-			},
-			{
-				name:   "create fail conflict name",
-				method: "POST",
-				url:    "/workouts",
+				name:   "update fail conflict name",
+				method: "PATCH",
+				url:    "/workouts/%s",
 				req:    `{"name":"Arms Heavy","exercises":[{"name":"Curl","muscles":[{"name":"Bicep","muscleGroup":"arms"}],"sets":[{"weight":45,"reps":10},{"weight":45,"reps":10},{"weight":45,"reps":10}]}]}`,
 				resp:   map[string]string{"errors": "workout name already exists"},
 				code:   http.StatusCreated,
 			},
-				{
-					name:   "update fail validations",
-					method: "PATCH",
-					url:    "/workouts/%s",
-					req:    `{"name":"","exercises":[{"name":"","muscles":[{"name":"","muscleGroup":"Arms"}],"sets":[{"weight":25,"reps":10},{"weight":25,"reps":10},{"weight":25,"reps":10}]}]}`,
-					resp:   map[string]string{"errors": "failed to validate create workout request. workout must have a name. exercise must have a name. muscle must have a name"},
-					code:   http.StatusBadRequest,
-				},
-				{
-					name:   "update fail conflict name",
-					method: "PATCH",
-					url:    "/workouts/%s",
-					req:    `{"name":"Arms Heavy","exercises":[{"name":"Curl","muscles":[{"name":"Bicep","muscleGroup":"arms"}],"sets":[{"weight":45,"reps":10},{"weight":45,"reps":10},{"weight":45,"reps":10}]}]}`,
-					resp:   map[string]string{"errors": "workout name already exists"},
-					code:   http.StatusCreated,
-				},
-				{
-					name:   "update happy path",
-					method: "PATCH",
-					url:    "/workouts/%s",
-					req:    `{"name":"Popeye","exercises":[{"name":"Curl","muscles":[{"name":"Bicep","muscleGroup":"arms"}],"sets":[{"weight":45,"reps":10},{"weight":45,"reps":10},{"weight":45,"reps":10}]}]}`,
-					resp:   map[string]string{"name": "Popeye"},
-					code:   http.StatusCreated,
-				},
-				{
-					name:   "delete happy path",
-					method: "DELETE",
-					url:    "/workouts/%s",
-					resp:   map[string]string{},
-					code:   http.StatusNoContent,
-				},
-				{
-					name:    "get all happy path",
-					method:  "GET",
-					url:     "/workouts",
-					resp:    map[string]string{},
-					code:    http.StatusOK,
-					comment: "clean up test data",
-				},
+			{
+				name:   "update happy path",
+				method: "PATCH",
+				url:    "/workouts/%s",
+				req:    `{"name":"Popeye","exercises":[{"name":"Curl","muscles":[{"name":"Bicep","muscleGroup":"arms"}],"sets":[{"weight":45,"reps":10},{"weight":45,"reps":10},{"weight":45,"reps":10}]}]}`,
+				resp:   map[string]string{"name": "Popeye"},
+				code:   http.StatusCreated,
+			},
 		*/
+		{
+			name:   "delete happy path",
+			method: "DELETE",
+			url:    "/workouts/%s",
+			code:   http.StatusNoContent,
+		},
+		{
+			name:    "get all happy path",
+			method:  "GET",
+			url:     "/workouts",
+			code:    http.StatusOK,
+			comment: "clean up test data",
+		},
 	}
 
 	userID := createTestUser(t)
@@ -133,8 +132,10 @@ func TestWorkout(t *testing.T) {
 			t.Fail()
 		}
 
+		respString := string(bodyBytes)
+
 		if tc.method == "GET" {
-			workoutsList := []map[string]string{}
+			workoutsList := []map[string]any{}
 			err = json.Unmarshal(bodyBytes, &workoutsList)
 			if err != nil {
 				t.Log(err)
@@ -161,19 +162,22 @@ func TestWorkout(t *testing.T) {
 			t.Skipf("skipping test success")
 		}
 
-		respMap := map[string]string{}
-		err = json.Unmarshal(bodyBytes, &respMap)
-		if err != nil {
+		matches, err := matcher.JSONStringMatches(respString, tc.resp)
+		if !matches || err != nil {
 			t.Log(err)
 			t.Fail()
 		}
 
-		for k, v := range tc.resp {
-			assert.Equal(t, respMap[k], v)
-		}
-
 		if tc.method == "POST" && resp.StatusCode == http.StatusCreated {
-			workoutIDs = append(workoutIDs, respMap["id"])
+			respMap := map[string]any{}
+			err = json.Unmarshal(bodyBytes, &respMap)
+			if err != nil {
+				t.Log(err)
+				t.Fail()
+			}
+			if id, ok := respMap["id"].(string); ok {
+				workoutIDs = append(workoutIDs, id)
+			}
 		}
 	}
 
