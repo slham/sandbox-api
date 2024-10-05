@@ -1,8 +1,12 @@
+//go:build unit
+// +build unit
+
 package crypt
 
 import (
-	"gopkg.in/go-playground/assert.v1"
 	"testing"
+
+	"gopkg.in/go-playground/assert.v1"
 )
 
 func TestCrypt(t *testing.T) {
