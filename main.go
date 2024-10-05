@@ -42,7 +42,7 @@ func main() {
 	r := mux.NewRouter()
 
 	// Middlewares
-	//r.Use(l.Logging)
+	// r.Use(l.Logging)
 
 	// User APIs
 	r.Methods("POST").Path("/users").HandlerFunc(userController.CreateUser)

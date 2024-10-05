@@ -20,7 +20,8 @@ func NewRequester(host string) Requester {
 			Transport: &http.Transport{
 				MaxIdleConnsPerHost: 10,
 			},
-		}}
+		},
+	}
 }
 
 func (r *Requester) Head(path string, headers map[string]string, data interface{}) (*http.Response, error) {

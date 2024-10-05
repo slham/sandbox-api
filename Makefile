@@ -4,11 +4,9 @@ build:
 build_cover:
 	go build -cover
 
-test:
-	go test -v -count=1 ./...
+test: unit int
 
-cover:
-	go test -v -count=1 -cover ./...
+cover: unit_cover int_cover
 
 unit:
 	go test -tags=unit -count=1 ./...
@@ -27,6 +25,9 @@ int_cover_see:
 
 lint:
 	golangci-lint run --enable-all
+
+lint_fix:
+	golangci-lint run --enable-all --fix
 
 clean:
 	go clean -modcache && go mod tidy

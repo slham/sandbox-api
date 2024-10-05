@@ -10,11 +10,11 @@ import (
 )
 
 func IsAlphaNumeric(s string) (bool, error) {
-	return regexp.Match(constant.AlphaNumericRegex.String(), []byte(s))
+	return regexp.MatchString(constant.AlphaNumericRegex.String(), s)
 }
 
 func IsNumber(s string) (bool, error) {
-	return regexp.Match(constant.NumberRegex.String(), []byte(s))
+	return regexp.MatchString(constant.NumberRegex.String(), s)
 }
 
 func IsMediumPassword(s string) bool {

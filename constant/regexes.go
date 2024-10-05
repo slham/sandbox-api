@@ -39,8 +39,8 @@ const (
 	ethAddressRegexString            = `^0x[0-9a-fA-F]{40}$`
 	ethAddressUpperRegexString       = `^0x[0-9A-F]{40}$`
 	ethAddressLowerRegexString       = `^0x[0-9a-f]{40}$`
-	//strongPassword                   = `^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{16,}$`
-	//mediumPassword                   = `^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$`
+
+	//mediumPassword                   = `^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$`.
 	zipCode      = `^[0-9]{5}$`
 	Users        = `^\/users$`
 	UsersID      = `^\/users\/[0-9_-]{1,}$`
@@ -89,8 +89,8 @@ var (
 	EthAddressRegex            = regexp.MustCompile(ethAddressRegexString)
 	EthaddressRegexUpper       = regexp.MustCompile(ethAddressUpperRegexString)
 	EthAddressRegexLower       = regexp.MustCompile(ethAddressLowerRegexString)
-	//StrongPasswordRegex        = regexp.MustCompile(strongPassword)
-	//MediumPasswordRegex        = regexp.MustCompile(mediumPassword)
+
+	//MediumPasswordRegex        = regexp.MustCompile(mediumPassword).
 	ZipCodeRegex    = regexp.MustCompile(zipCode)
 	UsersIDRegex    = regexp.MustCompile(UsersID)
 	UsersRegex      = regexp.MustCompile(Users)
