@@ -23,6 +23,24 @@ type updateUserRequest struct {
 	Email    string `json:"email"`
 }
 
+func handleUpdateUserError(w http.ResponseWriter, err error) {
+	if errors.Is(err, ApiErrBadRequest) {
+		slog.Warn("error updating user", "err", err)
+		request.RespondWithError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	if errors.Is(err, ApiErrConflict) {
+		slog.Warn("error updating user", "err", err)
+		request.RespondWithError(w, http.StatusConflict, err.Error())
+		return
+	}
+
+	slog.Error("error updating user", "err", err)
+	request.RespondWithError(w, http.StatusInternalServerError, "internal server error")
+	return
+}
+
 func (c *UserController) UpdateUser(w http.ResponseWriter, r *http.Request) {
 	slog.Debug("update user request")
 	ctx := r.Context()
@@ -40,20 +58,7 @@ func (c *UserController) UpdateUser(w http.ResponseWriter, r *http.Request) {
 
 	user, err := c.updateUser(ctx, req)
 	if err != nil {
-		if errors.Is(err, ApiErrBadRequest) {
-			slog.Warn("error updating user", "err", err)
-			request.RespondWithError(w, http.StatusBadRequest, err.Error())
-			return
-		}
-
-		if errors.Is(err, ApiErrConflict) {
-			slog.Warn("error updating user", "err", err)
-			request.RespondWithError(w, http.StatusConflict, err.Error())
-			return
-		}
-
-		slog.Error("error updating user", "err", err)
-		request.RespondWithError(w, http.StatusInternalServerError, "internal server error")
+		handleUpdateUserError(w, err)
 		return
 	}
 

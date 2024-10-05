@@ -11,13 +11,19 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/samber/lo"
-	"github.com/segmentio/ksuid"
 	"github.com/slham/sandbox-api/dao"
 	"github.com/slham/sandbox-api/model"
 	"github.com/slham/sandbox-api/request"
 )
 
-func handleCreateWorkoutError(w http.ResponseWriter, err error) {
+type updateWorkoutRequest struct {
+	UserID    string
+	WorkoutID string
+	Name      string          `json:"name"`
+	Exercises model.Exercises `json:"exercises"`
+}
+
+func handleUpdateWorkoutError(w http.ResponseWriter, err error) {
 	if errors.Is(err, ApiErrBadRequest) {
 		slog.Warn("error creating workout", "err", err)
 		request.RespondWithError(w, http.StatusBadRequest, err.Error())
@@ -35,63 +41,77 @@ func handleCreateWorkoutError(w http.ResponseWriter, err error) {
 	return
 }
 
-func (c *WorkoutController) CreateWorkout(w http.ResponseWriter, r *http.Request) {
-	slog.Debug("create workout request")
+func (c *WorkoutController) UpdateWorkout(w http.ResponseWriter, r *http.Request) {
+	slog.Debug("update workout request")
 	ctx := r.Context()
-	workout := model.Workout{}
+	req := updateWorkoutRequest{}
 	vars := mux.Vars(r)
 	userID := vars["user_id"]
+	workoutID := vars["workout_id"]
+	req.UserID = userID
+	req.WorkoutID = workoutID
 
-	if err := json.NewDecoder(r.Body).Decode(&workout); err != nil {
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		slog.Warn("error decoding create workout request", "err", err)
 		request.RespondWithError(w, http.StatusBadRequest, "malformed request body")
 		return
 	}
 
-	workout.UserID = userID
-	workout, err := c.createWorkout(ctx, workout)
-	if err != nil {
-		handleCreateWorkoutError(w, err)
+	if req.UserID != userID {
+		slog.Warn("user not allowed to modify this workout")
+		request.RespondWithError(w, http.StatusUnauthorized, "UNAUTHORIZED")
 		return
 	}
 
-	request.RespondWithJSON(w, http.StatusCreated, workout)
+	workout, err := c.updateWorkout(ctx, req)
+	if err != nil {
+		handleUpdateWorkoutError(w, err)
+		return
+	}
+
+	request.RespondWithJSON(w, http.StatusOK, workout)
 	return
 }
 
-func (c *WorkoutController) createWorkout(ctx context.Context, workout model.Workout) (model.Workout, error) {
-	slog.Debug("createWorkout", "userID", workout.UserID)
-	if _, err := dao.GetUserByID(ctx, workout.UserID); err != nil {
+func (c *WorkoutController) updateWorkout(ctx context.Context, req updateWorkoutRequest) (model.Workout, error) {
+	workout := model.Workout{}
+	if _, err := dao.GetUserByID(ctx, req.UserID); err != nil {
+		slog.Warn("failed to find user", "err", err)
 		return workout, NewApiError(404, ApiErrNotFound).Append("user does not exist")
 	}
 
-	if err := validateCreateWorkoutRequest(ctx, workout); err != nil {
-		return workout, fmt.Errorf("failed to validate create workout request. %w", err)
+	workout, err := dao.GetWorkoutByID(ctx, req.UserID, req.WorkoutID)
+	if err != nil {
+		slog.Warn("failed to find workout", "err", err)
+		return workout, NewApiError(404, ApiErrNotFound).Append("workout does not exist")
 	}
 
-	workout.ID = newWorkoutID()
-	workout.Created = time.Now()
+	if err := validateUpdateWorkoutRequest(ctx, req); err != nil {
+		return workout, fmt.Errorf("failed to validate update workout request. %w", err)
+	}
+
+	workout.Name = req.Name
+	workout.Exercises = req.Exercises
 	workout.Updated = time.Now()
 
-	workout, err := dao.InsertWorkout(ctx, workout)
-	if err != nil {
+	if err := dao.UpdateWorkout(ctx, workout); err != nil {
 		if errors.Is(err, dao.ErrConflictWorkoutName) {
 			return workout, NewApiError(409, ApiErrConflict).Append("workout name already exists")
 		}
-		return workout, fmt.Errorf("failed to insert workout. %w", err)
+		return workout, fmt.Errorf("failed to update workout. %w", err)
 	}
 
 	return workout, nil
 }
 
-func validateCreateWorkoutRequest(ctx context.Context, workout model.Workout) error {
+func validateUpdateWorkoutRequest(ctx context.Context, req updateWorkoutRequest) error {
 	apiErr := NewApiError(400, ApiErrBadRequest)
 
-	if workout.Name == "" {
+	if req.Name == "" {
 		apiErr = apiErr.Append("workout must have a name")
 	}
 
-	for _, exercise := range workout.Exercises {
+	for _, exercise := range req.Exercises {
 		if exercise.Name == "" {
 			apiErr = apiErr.Append("exercise must have a name")
 		}
@@ -111,8 +131,4 @@ func validateCreateWorkoutRequest(ctx context.Context, workout model.Workout) er
 	}
 
 	return nil
-}
-
-func newWorkoutID() string {
-	return fmt.Sprintf("work_%s", ksuid.New().String())
 }

@@ -55,32 +55,30 @@ func TestWorkout(t *testing.T) {
 			resp:   `{"errors": "workout name already exists"}`,
 			code:   http.StatusConflict,
 		},
-		/*
-			{
-				name:   "update fail validations",
-				method: "PATCH",
-				url:    "/workouts/%s",
-				req:    `{"name":"","exercises":[{"name":"","muscles":[{"name":"","muscleGroup":"Arms"}],"sets":[{"weight":25,"reps":10},{"weight":25,"reps":10},{"weight":25,"reps":10}]}]}`,
-				resp:   `{"errors": "failed to validate create workout request. workout must have a name. exercise must have a name. muscle must have a name"}`,
-				code:   http.StatusBadRequest,
-			},
-				{
-					name:   "update fail conflict name",
-					method: "PATCH",
-					url:    "/workouts/%s",
-					req:    `{"name":"Arms Heavy","exercises":[{"name":"Curl","muscles":[{"name":"Bicep","muscleGroup":"arms"}],"sets":[{"weight":45,"reps":10},{"weight":45,"reps":10},{"weight":45,"reps":10}]}]}`,
-					resp:   map[string]string{"errors": "workout name already exists"},
-					code:   http.StatusCreated,
-				},
-				{
-					name:   "update happy path",
-					method: "PATCH",
-					url:    "/workouts/%s",
-					req:    `{"name":"Popeye","exercises":[{"name":"Curl","muscles":[{"name":"Bicep","muscleGroup":"arms"}],"sets":[{"weight":45,"reps":10},{"weight":45,"reps":10},{"weight":45,"reps":10}]}]}`,
-					resp:   map[string]string{"name": "Popeye"},
-					code:   http.StatusCreated,
-				},
-		*/
+		{
+			name:   "update fail validations",
+			method: "PATCH",
+			url:    "/workouts/%s",
+			req:    `{"name":"","exercises":[{"name":"","muscles":[{"name":"","muscleGroup":"Arms"}],"sets":[{"weight":25,"reps":10},{"weight":25,"reps":10},{"weight":25,"reps":10}]}]}`,
+			resp:   `{"errors":"failed to validate update workout request. workout must have a name. exercise must have a name. muscle must have a name. invalid muscle group. valid options: [arms back chest core heart legs shoulders]"}`,
+			code:   http.StatusBadRequest,
+		},
+		{
+			name:   "update fail conflict name",
+			method: "PATCH",
+			url:    "/workouts/%s",
+			req:    `{"name":"Arms Heavy","exercises":[{"name":"Curl","muscles":[{"name":"Bicep","muscleGroup":"arms"}],"sets":[{"weight":45,"reps":10},{"weight":45,"reps":10},{"weight":45,"reps":10}]}]}`,
+			resp:   `{"errors": "workout name already exists"}`,
+			code:   http.StatusConflict,
+		},
+		{
+			name:   "update happy path",
+			method: "PATCH",
+			url:    "/workouts/%s",
+			req:    `{"name":"Popeye","exercises":[{"name":"Curl","muscles":[{"name":"Bicep","muscleGroup":"arms"}],"sets":[{"weight":45,"reps":10},{"weight":45,"reps":10},{"weight":45,"reps":10}]}]}`,
+			resp:   `{"id":"#regex ^work_[a-zA-Z0-9]{27}$","name":"Popeye","user_id":"#regex ^user_[a-zA-Z0-9]{27}$","created":"#datetime","updated":"#datetime","exercises":[{"name":"Curl","muscles":[{"name":"Bicep","muscleGroup":"arms"}],"sets":[{"weight":45,"reps":10},{"weight":45,"reps":10},{"weight":45,"reps":10}]}]}`,
+			code:   http.StatusOK,
+		},
 		{
 			name:   "delete happy path",
 			method: "DELETE",
@@ -167,6 +165,7 @@ func TestWorkout(t *testing.T) {
 		matches, err := matcher.JSONStringMatches(respString, tc.resp)
 		if !matches || err != nil {
 			t.Log(err)
+			t.Logf("resp: %s. expected: %s", respString, tc.resp)
 			t.Fail()
 		}
 
@@ -211,7 +210,6 @@ func createTestUser(t *testing.T) string {
 	}
 
 	respMap := map[string]string{}
-	t.Logf("respMap: %+v", respMap)
 	err = json.Unmarshal(bodyBytes, &respMap)
 	if err != nil {
 		t.Log(err)

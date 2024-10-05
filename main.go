@@ -55,6 +55,7 @@ func main() {
 	r.Methods("POST").Path("/users/{user_id}/workouts").HandlerFunc(workoutController.CreateWorkout)
 	r.Methods("GET").Path("/users/{user_id}/workouts").HandlerFunc(workoutController.GetWorkouts)
 	r.Methods("GET").Path("/users/{user_id}/workouts/{workout_id}").HandlerFunc(workoutController.GetWorkout)
+	r.Methods("PATCH").Path("/users/{user_id}/workouts/{workout_id}").HandlerFunc(workoutController.UpdateWorkout)
 	r.Methods("DELETE").Path("/users/{user_id}/workouts/{workout_id}").HandlerFunc(workoutController.DeleteWorkout)
 
 	srv := &http.Server{
