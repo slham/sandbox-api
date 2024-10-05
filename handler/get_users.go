@@ -8,27 +8,71 @@ import (
 	"log/slog"
 	"net/http"
 	"net/url"
-	"strconv"
 
 	"github.com/slham/sandbox-api/dao"
 	"github.com/slham/sandbox-api/model"
 	"github.com/slham/sandbox-api/request"
 )
 
+type getUsersQuery struct {
+	ID       string
+	Username string
+	Email    string
+	APIQuery
+}
+
+type getUsersRequest struct {
+	query getUsersQuery
+}
+
+func getUserQueryParams(q url.Values) (getUsersQuery, error) {
+	guq := getUsersQuery{}
+	if qID := q.Get("id"); qID != "" {
+		guq.ID = qID
+	}
+	if qUsername := q.Get("username"); qUsername != "" {
+		guq.Username = qUsername
+	}
+	if qEmail := q.Get("email"); qEmail != "" {
+		guq.Email = qEmail
+	}
+	apiQuery, err := getStandardQueryParams(q)
+	if err != nil {
+		return guq, fmt.Errorf("failed to gather query params. %w", err)
+	}
+	guq.APIQuery = apiQuery
+	return guq, nil
+}
+
+func handleGetUsersError(w http.ResponseWriter, err error) {
+	if errors.Is(err, ApiErrBadRequest) {
+		slog.Warn("error getting users", "err", err)
+		request.RespondWithError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	slog.Error("error getting users", "err", err)
+	request.RespondWithError(w, http.StatusInternalServerError, "internal server error")
+	return
+}
+
 func (c *UserController) GetUsers(w http.ResponseWriter, r *http.Request) {
+	slog.Debug("get users request")
 	ctx := r.Context()
 	query := r.URL.Query()
 
-	users, err := c.getUsers(ctx, query)
+	req := getUsersRequest{}
+	q, err := getUserQueryParams(query)
 	if err != nil {
-		if errors.Is(err, ApiErrBadRequest) {
-			slog.Warn("error getting users", "err", err)
-			request.RespondWithError(w, http.StatusBadRequest, err.Error())
-			return
-		}
+		handleGetUsersError(w, err)
+		return
+	}
 
-		slog.Error("error getting users", "err", err)
-		request.RespondWithError(w, http.StatusInternalServerError, "internal server error")
+	req.query = q
+
+	users, err := c.getUsers(ctx, req)
+	if err != nil {
+		handleGetUsersError(w, err)
 		return
 	}
 
@@ -36,40 +80,18 @@ func (c *UserController) GetUsers(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
-func (c *UserController) getUsers(ctx context.Context, query url.Values) ([]model.User, error) {
+func (c *UserController) getUsers(ctx context.Context, req getUsersRequest) ([]model.User, error) {
 	users := []model.User{}
-	q := dao.UserQuery{}
-
-	if qID := query.Get("id"); qID != "" {
-		q.ID = qID
-	}
-	if qUsername := query.Get("username"); qUsername != "" {
-		q.Username = qUsername
-	}
-	if qEmail := query.Get("email"); qEmail != "" {
-		q.Email = qEmail
-	}
-	if qSortCol := query.Get("sort_column"); qSortCol != "" {
-		q.SortCol = qSortCol
-	}
-	if qSort := query.Get("sort"); qSort != "" {
-		q.Sort = qSort
-	}
-	if qLimit := query.Get("limit"); qLimit != "" {
-		limit, err := strconv.Atoi(qLimit)
-		if err != nil {
-			slog.Warn("invalid limit", "limit", qLimit)
-			return users, NewApiError(400, ApiErrBadRequest).Append("invalid limit")
-		}
-		q.Limit = limit
-	}
-	if qOffset := query.Get("offset"); qOffset != "" {
-		offset, err := strconv.Atoi(qOffset)
-		if err != nil {
-			slog.Warn("invalid offset", "offset", qOffset)
-			return users, NewApiError(400, ApiErrBadRequest).Append("invalid offset")
-		}
-		q.Offset = offset
+	q := dao.UserQuery{
+		ID:       req.query.ID,
+		Username: req.query.Username,
+		Email:    req.query.Email,
+		Query: dao.Query{
+			SortCol: req.query.APIQuery.SortCol,
+			Sort:    req.query.APIQuery.Sort,
+			Limit:   req.query.APIQuery.Limit,
+			Offset:  req.query.APIQuery.Offset,
+		},
 	}
 
 	users, err := dao.GetUsers(ctx, q)

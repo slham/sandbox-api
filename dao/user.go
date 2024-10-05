@@ -16,7 +16,7 @@ var (
 )
 
 func InsertUser(ctx context.Context, u model.User) (model.User, error) {
-	row := getDB().QueryRowContext(ctx,
+	_, err := getDB().ExecContext(ctx,
 		`INSERT INTO sandbox.user(
 			id,
 			username,
@@ -39,7 +39,7 @@ func InsertUser(ctx context.Context, u model.User) (model.User, error) {
 		u.Email,
 		u.Created,
 		u.Updated)
-	if err := row.Err(); err != nil {
+	if err != nil {
 		if pgErr, ok := err.(*pq.Error); ok {
 			if pgErr.Code == "23505" {
 				if strings.Contains(pgErr.Message, "username") {
@@ -60,18 +60,8 @@ type UserQuery struct {
 	ID           string
 	Username     string
 	Email        string
-	Sort         string
-	SortCol      string
-	Limit        int
-	Offset       int
 	HidePassword bool
-}
-
-func checkWhereClause(stmt string) string {
-	if !strings.HasSuffix(stmt, "WHERE") {
-		return fmt.Sprintf("%s AND", stmt)
-	}
-	return stmt
+	Query
 }
 
 func GetUserByEmail(ctx context.Context, email string) (model.User, error) {
@@ -120,19 +110,21 @@ func GetUsers(ctx context.Context, q UserQuery) ([]model.User, error) {
 			created,
 			updated
 		FROM
-			sandbox.user
-		WHERE`
+			sandbox.user`
 
-	if q.ID != "" {
-		stmt = fmt.Sprintf("%s %s='%s'", stmt, "id", q.ID)
-	}
-	if q.Username != "" {
-		stmt = checkWhereClause(stmt)
-		stmt = fmt.Sprintf("%s %s='%s'", stmt, "username", q.Username)
-	}
-	if q.Email != "" {
-		stmt = checkWhereClause(stmt)
-		stmt = fmt.Sprintf("%s %s='%s'", stmt, "email", q.Email)
+	if q.ID != "" || q.Username != "" || q.Email != "" {
+		stmt = fmt.Sprintf("%s %s", stmt, "WHERE")
+		if q.ID != "" {
+			stmt = fmt.Sprintf("%s %s='%s'", stmt, "id", q.ID)
+		}
+		if q.Username != "" {
+			stmt = checkWhereClause(stmt)
+			stmt = fmt.Sprintf("%s %s='%s'", stmt, "username", q.Username)
+		}
+		if q.Email != "" {
+			stmt = checkWhereClause(stmt)
+			stmt = fmt.Sprintf("%s %s='%s'", stmt, "email", q.Email)
+		}
 	}
 	if q.SortCol != "" {
 		stmt = fmt.Sprintf("%s ORDER BY %s", stmt, q.SortCol)
@@ -176,4 +168,42 @@ func GetUsers(ctx context.Context, q UserQuery) ([]model.User, error) {
 	}
 
 	return users, nil
+}
+
+func UpdateUser(ctx context.Context, user model.User) error {
+	_, err := getDB().ExecContext(ctx,
+		`UPDATE sandbox.user 
+		SET username = $1, email = $2, updated = $3
+		WHERE id = $4`,
+		user.Username,
+		user.Email,
+		user.Updated,
+		user.ID)
+	if err != nil {
+		if pgErr, ok := err.(*pq.Error); ok {
+			if pgErr.Code == "23505" {
+				if strings.Contains(pgErr.Message, "username") {
+					return ErrConflictUsername
+				} else if strings.Contains(pgErr.Message, "email") {
+					return ErrConflictEmail
+				}
+				return fmt.Errorf("failed to update user. conflict. %w", err)
+			}
+		}
+		return fmt.Errorf("failed to update user. %w", err)
+	}
+
+	return nil
+}
+
+func DeleteUser(ctx context.Context, id string) error {
+	_, err := getDB().ExecContext(ctx,
+		`DELETE FROM sandbox.user 
+		WHERE id = $1`,
+		id)
+	if err != nil {
+		return fmt.Errorf("failed to delete user. %w", err)
+	}
+
+	return nil
 }
