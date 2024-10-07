@@ -15,7 +15,7 @@ var (
 	ErrConflictEmail    = errors.New("email already exists")
 )
 
-func InsertUser(ctx context.Context, u model.User) (model.User, error) {
+func InsertUser(ctx context.Context, user model.User) (model.User, error) {
 	_, err := getDB().ExecContext(ctx,
 		`INSERT INTO sandbox.user(
 			id,
@@ -33,27 +33,27 @@ func InsertUser(ctx context.Context, u model.User) (model.User, error) {
 			$5,
 			$6
 		)`,
-		u.ID,
-		u.Username,
-		u.Password,
-		u.Email,
-		u.Created,
-		u.Updated)
+		user.ID,
+		user.Username,
+		user.Password,
+		user.Email,
+		user.Created,
+		user.Updated)
 	if err != nil {
 		if pgErr, ok := err.(*pq.Error); ok {
 			if pgErr.Code == "23505" {
 				if strings.Contains(pgErr.Message, "username") {
-					return u, ErrConflictUsername
+					return user, ErrConflictUsername
 				} else if strings.Contains(pgErr.Message, "email") {
-					return u, ErrConflictEmail
+					return user, ErrConflictEmail
 				}
-				return u, fmt.Errorf("failed to insert user. conflict. %w", err)
+				return user, fmt.Errorf("failed to insert user. conflict. %w", err)
 			}
 		}
-		return u, fmt.Errorf("failed to insert user. %w", err)
+		return user, fmt.Errorf("failed to insert user. %w", err)
 	}
 
-	return u, nil
+	return user, nil
 }
 
 type UserQuery struct {
@@ -103,12 +103,7 @@ func GetUser(ctx context.Context, q UserQuery) (model.User, error) {
 func GetUsers(ctx context.Context, q UserQuery) ([]model.User, error) {
 	stmt := `
 		SELECT
-			id,
-			username,
-			password,
-			email,
-			created,
-			updated
+			id, username, password, email, created, updated
 		FROM
 			sandbox.user`
 
@@ -155,16 +150,20 @@ func GetUsers(ctx context.Context, q UserQuery) ([]model.User, error) {
 
 	defer rows.Close()
 
+	if rows.Err() != nil {
+		return users, fmt.Errorf("failed to query users. rows. %w", err)
+	}
+
 	for rows.Next() {
-		var u model.User
-		if err := rows.Scan(&u.ID, &u.Username, &u.Password, &u.Email, &u.Created, &u.Updated); err != nil {
+		var user model.User
+		if err := rows.Scan(&user.ID, &user.Username, &user.Password, &user.Email, &user.Created, &user.Updated); err != nil {
 			return users, fmt.Errorf("failed to scan.  %w", err)
 		}
 
 		if q.HidePassword {
-			u.Password = ""
+			user.Password = ""
 		}
-		users = append(users, u)
+		users = append(users, user)
 	}
 
 	return users, nil

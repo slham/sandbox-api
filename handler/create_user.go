@@ -54,7 +54,6 @@ func (c *UserController) CreateUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	request.RespondWithJSON(w, http.StatusCreated, user)
-	return
 }
 
 func (c *UserController) createUser(ctx context.Context, req createUserRequest) (model.User, error) {
@@ -99,7 +98,8 @@ func validateCreateUserRequest(ctx context.Context, req createUserRequest) error
 	}
 
 	if ok := valid.IsMediumPassword(req.Password); !ok {
-		apiErr = apiErr.Append("password must be at least 8 characters long and contain at least one number, one special character, one upper case character, and one lower case character")
+		passwordErrMsg := "password must be at least 8 characters long and contain at least one number, one special character, one upper case character, and one lower case character"
+		apiErr = apiErr.Append(passwordErrMsg)
 	}
 
 	if err := valid.IsEmail(req.Email); err != nil {

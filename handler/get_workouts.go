@@ -72,7 +72,6 @@ func (c *WorkoutController) GetWorkouts(w http.ResponseWriter, r *http.Request) 
 }
 
 func (c *WorkoutController) getWorkouts(ctx context.Context, req getWorkoutsRequest) ([]model.Workout, error) {
-	workouts := []model.Workout{}
 	q := dao.WorkoutQuery{
 		UserID: req.userID,
 		Query: dao.Query{

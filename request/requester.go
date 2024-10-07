@@ -2,6 +2,7 @@ package request
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"net/http"
 	"time"
@@ -24,38 +25,38 @@ func NewRequester(host string) Requester {
 	}
 }
 
-func (r *Requester) Head(path string, headers map[string]string, data interface{}) (*http.Response, error) {
-	return r.request("HEAD", path, headers, data)
+func (r *Requester) Head(ctx context.Context, path string, headers map[string]string, data interface{}) (*http.Response, error) {
+	return r.request(ctx, "HEAD", path, headers, data)
 }
 
-func (r *Requester) Post(path string, headers map[string]string, data interface{}) (*http.Response, error) {
-	return r.request("POST", path, headers, data)
+func (r *Requester) Post(ctx context.Context, path string, headers map[string]string, data interface{}) (*http.Response, error) {
+	return r.request(ctx, "POST", path, headers, data)
 }
 
-func (r *Requester) Get(path string, headers map[string]string, data interface{}) (*http.Response, error) {
-	return r.request("GET", path, headers, data)
+func (r *Requester) Get(ctx context.Context, path string, headers map[string]string, data interface{}) (*http.Response, error) {
+	return r.request(ctx, "GET", path, headers, data)
 }
 
-func (r *Requester) Patch(path string, headers map[string]string, data interface{}) (*http.Response, error) {
-	return r.request("PATCH", path, headers, data)
+func (r *Requester) Patch(ctx context.Context, path string, headers map[string]string, data interface{}) (*http.Response, error) {
+	return r.request(ctx, "PATCH", path, headers, data)
 }
 
-func (r *Requester) Put(path string, headers map[string]string, data interface{}) (*http.Response, error) {
-	return r.request("PUT", path, headers, data)
+func (r *Requester) Put(ctx context.Context, path string, headers map[string]string, data interface{}) (*http.Response, error) {
+	return r.request(ctx, "PUT", path, headers, data)
 }
 
-func (r *Requester) Delete(path string, headers map[string]string, data interface{}) (*http.Response, error) {
-	return r.request("DELETE", path, headers, data)
+func (r *Requester) Delete(ctx context.Context, path string, headers map[string]string, data interface{}) (*http.Response, error) {
+	return r.request(ctx, "DELETE", path, headers, data)
 }
 
-func (r *Requester) request(method string, path string, headers map[string]string, data interface{}) (*http.Response, error) {
+func (r *Requester) request(ctx context.Context, method string, path string, headers map[string]string, data interface{}) (*http.Response, error) {
 	payload, err := json.Marshal(data)
 	if err != nil {
 		return nil, err
 	}
 
 	reader := bytes.NewBuffer(payload)
-	req, err := http.NewRequest(method, r.ServiceURL+path, reader)
+	req, err := http.NewRequestWithContext(ctx, method, r.ServiceURL+path, reader)
 	if err != nil {
 		return nil, err
 	}

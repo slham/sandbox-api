@@ -32,7 +32,6 @@ func handleCreateWorkoutError(w http.ResponseWriter, err error) {
 
 	slog.Error("error creating workout", "err", err)
 	request.RespondWithError(w, http.StatusInternalServerError, "internal server error")
-	return
 }
 
 func (c *WorkoutController) CreateWorkout(w http.ResponseWriter, r *http.Request) {
@@ -56,7 +55,6 @@ func (c *WorkoutController) CreateWorkout(w http.ResponseWriter, r *http.Request
 	}
 
 	request.RespondWithJSON(w, http.StatusCreated, workout)
-	return
 }
 
 func (c *WorkoutController) createWorkout(ctx context.Context, workout model.Workout) (model.Workout, error) {

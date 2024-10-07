@@ -31,15 +31,18 @@ func Connect() (Dao, error) {
 	if err != nil {
 		slog.Error("failed to open connection.", "err", err)
 		slog.Debug(connectionString)
+
 		return db, fmt.Errorf("failed to open connection. %w", err)
 	}
 
 	if err := db.DB.Ping(); err != nil {
 		slog.Error("failed to ping database", "err", err)
+
 		return db, fmt.Errorf("failed to ping database. %w", err)
 	}
 
 	slog.Info("successfully connected to db")
+
 	return db, nil
 }
 

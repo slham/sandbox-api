@@ -1,0 +1,13 @@
+linters:
+  disable:
+    - depguard
+    - exhaustruct
+    - funlen
+    - gochecknoglobals
+    - nestif
+    - nlreturn
+    - perfsprint
+    - tagliatelle
+    - varnamelen
+    - wrapcheck
+    - wsl

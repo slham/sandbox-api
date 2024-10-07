@@ -81,7 +81,6 @@ func (c *UserController) GetUsers(w http.ResponseWriter, r *http.Request) {
 }
 
 func (c *UserController) getUsers(ctx context.Context, req getUsersRequest) ([]model.User, error) {
-	users := []model.User{}
 	q := dao.UserQuery{
 		ID:       req.query.ID,
 		Username: req.query.Username,
