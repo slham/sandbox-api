@@ -10,9 +10,7 @@ import (
 	"github.com/slham/sandbox-api/model"
 )
 
-var (
-	ErrConflictWorkoutName = errors.New("workout name already exists")
-)
+var ErrConflictWorkoutName = errors.New("workout name already exists")
 
 func InsertWorkout(ctx context.Context, workout model.Workout) (model.Workout, error) {
 	_, err := getDB().ExecContext(ctx,

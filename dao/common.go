@@ -16,5 +16,6 @@ func checkWhereClause(stmt string) string {
 	if !strings.HasSuffix(stmt, "WHERE") {
 		return fmt.Sprintf("%s AND", stmt)
 	}
+
 	return stmt
 }
