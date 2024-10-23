@@ -11,3 +11,6 @@ linters:
     - varnamelen
     - wrapcheck
     - wsl
+issues:
+  exclude-files:
+    - constant/regexes.go

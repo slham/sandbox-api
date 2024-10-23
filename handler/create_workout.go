@@ -74,7 +74,7 @@ func (c *WorkoutController) createWorkout(ctx context.Context, workout model.Wor
 	workout, err := dao.InsertWorkout(ctx, workout)
 	if err != nil {
 		if errors.Is(err, dao.ErrConflictWorkoutName) {
-			return workout, NewApiError(409, ApiErrConflict).Append("workout name already exists")
+			return workout, NewApiError(http.StatusConflict, ApiErrConflict).Append("workout name already exists")
 		}
 		return workout, fmt.Errorf("failed to insert workout. %w", err)
 	}
@@ -83,7 +83,7 @@ func (c *WorkoutController) createWorkout(ctx context.Context, workout model.Wor
 }
 
 func validateCreateWorkoutRequest(ctx context.Context, workout model.Workout) error {
-	apiErr := NewApiError(400, ApiErrBadRequest)
+	apiErr := NewApiError(http.StatusBadRequest, ApiErrBadRequest)
 
 	if workout.Name == "" {
 		apiErr = apiErr.Append("workout must have a name")
@@ -98,7 +98,7 @@ func validateCreateWorkoutRequest(ctx context.Context, workout model.Workout) er
 			if muscle.Name == "" {
 				apiErr = apiErr.Append("muscle must have a name")
 			}
-			if !lo.Contains(model.MuscleGroups, model.MuscleGroup(muscle.MuscleGroup)) {
+			if !lo.Contains(model.MuscleGroups, muscle.MuscleGroup) {
 				apiErr = apiErr.Append(fmt.Sprintf("invalid muscle group. valid options: %v", model.MuscleGroups))
 			}
 		}
