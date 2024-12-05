@@ -25,3 +25,5 @@ build/
 integration/cov*
 
 ~
+
+env/
