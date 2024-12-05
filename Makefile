@@ -41,3 +41,10 @@ run_cover:
 compile:
 	go-executable-build.sh sandbox-api .
 
+build_image:
+	docker build --rm -t "sandbox-api" --build-arg ex_path=linux/amd64 .
+
+containerize: compile build_image
+
+run_container:
+	docker run -d --env-file ./env/local.env sandbox-api
