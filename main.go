@@ -36,6 +36,7 @@ func main() {
 	}
 
 	// Controllers
+	authController := handler.NewAuthController()
 	userController := handler.NewUserController()
 	workoutController := handler.NewWorkoutController()
 
@@ -43,6 +44,12 @@ func main() {
 
 	// Middlewares
 	// r.Use(l.Logging)
+
+	// Auth APIs
+	r.Methods("GET").Path("/auth/google/login").HandlerFunc(authController.OauthGoogleLogin)
+	r.Methods("GET").Path("/auth/google/callback").HandlerFunc(authController.OauthGoogleCallback)
+	//r.Methods("POST").Path("/login").HandlerFunc()
+	//r.Methods("POST").Path("/logout").HandlerFunc()
 
 	// User APIs
 	r.Methods("POST").Path("/users").HandlerFunc(userController.CreateUser)
