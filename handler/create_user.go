@@ -69,11 +69,12 @@ func (c *UserController) createUser(ctx context.Context, req createUserRequest) 
 		return user, fmt.Errorf("failed to encrypt password. %w", err)
 	}
 
+	now := time.Now()
 	user.ID = newUserID()
 	user.Username = req.Username
 	user.Email = req.Email
-	user.Created = time.Now()
-	user.Updated = time.Now()
+	user.Created = now
+	user.Updated = now
 
 	user, err = dao.InsertUser(ctx, user)
 	if err != nil {
