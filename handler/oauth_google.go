@@ -113,14 +113,13 @@ func (c *AuthController) OauthGoogleCallback(w http.ResponseWriter, r *http.Requ
 	}
 
 	userInfo := GoogleOAuthUserInfo{}
-	err := json.Unmarshal(data, &userInfo)
-	if err != nil {
+	if err := json.Unmarshal(data, &userInfo); err != nil {
 		slog.Error("failed to unmarshal user data", "err", err)
 		handleOauthGoogleError(w, err)
 		return
 	}
 
-	user, err := oauthFlowMap[flow](ctx, userInfo)
+	_, err = oauthFlowMap[oauthFlow](ctx, userInfo)
 	if err != nil {
 		slog.Error("failed to check user", "err", err)
 		handleOauthGoogleError(w, err)
@@ -215,7 +214,7 @@ func newPassword() (string, error) {
 func makeUser(ctx context.Context, userInfo GoogleOAuthUserInfo) (model.User, error) {
 	password, passwordErr := newPassword()
 	if passwordErr != nil {
-		return user, fmt.Errorf("failed to generate new user password. %w", passwordErr)
+		return model.User{}, fmt.Errorf("failed to generate new user password. %w", passwordErr)
 	}
 	now := time.Now()
 	newUser := model.User{
@@ -226,7 +225,7 @@ func makeUser(ctx context.Context, userInfo GoogleOAuthUserInfo) (model.User, er
 		Created:  now,
 		Updated:  now,
 	}
-	user, err = dao.InsertUser(ctx, user)
+	user, err := dao.InsertUser(ctx, newUser)
 	if err != nil {
 		if errors.Is(err, dao.ErrConflictUsername) {
 			return user, NewApiError(409, ApiErrConflict).Append("username already exists")

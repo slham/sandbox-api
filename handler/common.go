@@ -10,6 +10,7 @@ import (
 
 var (
 	ApiErrBadRequest = errors.New("bad request")
+	ApiErrForbidden  = errors.New("forbidden")
 	ApiErrNotFound   = errors.New("not found")
 	ApiErrConflict   = errors.New("conflict")
 )
