@@ -121,7 +121,7 @@ func TestUser(t *testing.T) {
 		},
 	}
 
-	var testCookie http.Cookie
+	var userTestCookie http.Cookie
 	userIDs := []string{}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -136,7 +136,7 @@ func TestUser(t *testing.T) {
 				t.Fail()
 			}
 			req.Header.Set("Content-Type", "application/json")
-			req.AddCookie(&testCookie)
+			req.AddCookie(&userTestCookie)
 			client := http.Client{
 				Timeout: 10 * time.Second,
 			}
@@ -151,7 +151,7 @@ func TestUser(t *testing.T) {
 			cookies := resp.Cookies()
 			for _, cookie := range cookies {
 				if cookie.Name == "sandbox-cookie" {
-					testCookie = *cookie
+					userTestCookie = *cookie
 					break
 				}
 			}
@@ -184,7 +184,7 @@ func TestUser(t *testing.T) {
 						t.Fail()
 					}
 					rq.Header.Set("Content-Type", "application/json")
-					req.AddCookie(&testCookie)
+					rq.AddCookie(&userTestCookie)
 					resp, err := client.Do(rq)
 					if err != nil {
 						t.Log(err)

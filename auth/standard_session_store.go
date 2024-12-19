@@ -28,6 +28,7 @@ func NewStandardSessionStore() *StandardSessionStore {
 func (store *StandardSessionStore) EstablishSession(w http.ResponseWriter, r *http.Request) {
 	session, err := store.cookieStore.Get(r, cookieName)
 	if err != nil {
+		slog.Error("failed to establish session")
 		http.Error(w, "Invalid Credentials", http.StatusUnauthorized)
 		return
 	}
@@ -39,11 +40,13 @@ func (store *StandardSessionStore) EstablishSession(w http.ResponseWriter, r *ht
 func (store *StandardSessionStore) VerifySession(w http.ResponseWriter, r *http.Request) {
 	session, err := store.cookieStore.Get(r, cookieName)
 	if err != nil {
+		slog.Error("failed to verify session")
 		http.Error(w, "Invalid Credentials", http.StatusUnauthorized)
 		return
 	}
 
 	if auth, ok := session.Values["authenticated"].(bool); !ok || !auth {
+		slog.Warn("INTRUDER!")
 		http.Error(w, "Forbidden", http.StatusForbidden)
 		return
 	}
@@ -54,6 +57,7 @@ func (store *StandardSessionStore) VerifySession(w http.ResponseWriter, r *http.
 func (store *StandardSessionStore) TerminateSession(w http.ResponseWriter, r *http.Request) {
 	session, err := store.cookieStore.Get(r, cookieName)
 	if err != nil {
+		slog.Error("failed to terminate session")
 		http.Error(w, "Invalid Credentials", http.StatusUnauthorized)
 		return
 	}

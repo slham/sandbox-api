@@ -19,6 +19,11 @@ import (
 	"github.com/slham/toolbelt/l"
 )
 
+const (
+	SERVER_READ_TIMEOUT  = 15
+	SERVER_WRITE_TIMEOUT = 15
+)
+
 func main() {
 	env := os.Getenv("SANDBOX_ENVIRONMENT")
 	switch env {
@@ -68,17 +73,17 @@ func main() {
 	r.Methods("DELETE").Path("/users/{user_id}").HandlerFunc(middlewares.Chain(userController.DeleteUser, verifySession))
 
 	// Workouts APIs
-	r.Methods("POST").Path("/users/{user_id}/workouts").HandlerFunc(workoutController.CreateWorkout)
-	r.Methods("GET").Path("/users/{user_id}/workouts").HandlerFunc(workoutController.GetWorkouts)
-	r.Methods("GET").Path("/users/{user_id}/workouts/{workout_id}").HandlerFunc(workoutController.GetWorkout)
-	r.Methods("PATCH").Path("/users/{user_id}/workouts/{workout_id}").HandlerFunc(workoutController.UpdateWorkout)
-	r.Methods("DELETE").Path("/users/{user_id}/workouts/{workout_id}").HandlerFunc(workoutController.DeleteWorkout)
+	r.Methods("POST").Path("/users/{user_id}/workouts").HandlerFunc(middlewares.Chain(workoutController.CreateWorkout, verifySession))
+	r.Methods("GET").Path("/users/{user_id}/workouts").HandlerFunc(middlewares.Chain(workoutController.GetWorkouts, verifySession))
+	r.Methods("GET").Path("/users/{user_id}/workouts/{workout_id}").HandlerFunc(middlewares.Chain(workoutController.GetWorkout, verifySession))
+	r.Methods("PATCH").Path("/users/{user_id}/workouts/{workout_id}").HandlerFunc(middlewares.Chain(workoutController.UpdateWorkout, verifySession))
+	r.Methods("DELETE").Path("/users/{user_id}/workouts/{workout_id}").HandlerFunc(middlewares.Chain(workoutController.DeleteWorkout, verifySession))
 
 	srv := &http.Server{
-		Addr:         ":8080",
+		Addr:         ":8080", //TODO: YIKES
 		Handler:      r,
-		ReadTimeout:  15 * time.Second,
-		WriteTimeout: 15 * time.Second,
+		ReadTimeout:  SERVER_READ_TIMEOUT * time.Second,
+		WriteTimeout: SERVER_WRITE_TIMEOUT * time.Second,
 	}
 
 	go func() {

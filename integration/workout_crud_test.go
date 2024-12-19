@@ -97,7 +97,7 @@ func TestWorkout(t *testing.T) {
 		},
 	}
 
-	userID := createTestUser(t)
+	userID, workoutTestCookie := createTestUser(t)
 	workoutIDs := []string{}
 	for _, tc := range testCases {
 		bodyReader := bytes.NewReader([]byte(tc.req))
@@ -112,6 +112,7 @@ func TestWorkout(t *testing.T) {
 			t.Fail()
 		}
 		req.Header.Set("Content-Type", "application/json")
+		req.AddCookie(&workoutTestCookie)
 		client := http.Client{
 			Timeout: 10 * time.Second,
 		}
@@ -152,6 +153,7 @@ func TestWorkout(t *testing.T) {
 					t.Fail()
 				}
 				rq.Header.Set("Content-Type", "application/json")
+				rq.AddCookie(&workoutTestCookie)
 				resp, err := client.Do(rq)
 				if err != nil {
 					t.Log(err)
@@ -184,10 +186,10 @@ func TestWorkout(t *testing.T) {
 			}
 		}
 	}
-
 }
 
-func createTestUser(t *testing.T) string {
+func createTestUser(t *testing.T) (string, http.Cookie) {
+	var workoutTestCookie http.Cookie
 	url := "http://localhost:8080/users"
 	reqBody := `{"username": "test_user_workout_crud", "password": "thisIsAG00dPassword!", "email": "test@workoutCrud.com"}`
 	bodyReader := bytes.NewReader([]byte(reqBody))
@@ -206,6 +208,14 @@ func createTestUser(t *testing.T) string {
 		t.Fail()
 	}
 
+	cookies := resp.Cookies()
+	for _, cookie := range cookies {
+		if cookie.Name == "sandbox-cookie" {
+			workoutTestCookie = *cookie
+			break
+		}
+	}
+
 	bodyBytes, err := io.ReadAll(resp.Body)
 	if err != nil {
 		t.Log(err)
@@ -218,10 +228,10 @@ func createTestUser(t *testing.T) string {
 		t.Log(err)
 		t.Fail()
 	}
-	return respMap["id"]
+	return respMap["id"], workoutTestCookie
 }
 
-func deleteTestUser(t *testing.T, userID string) {
+func deleteTestUser(t *testing.T, userID string, workoutTestCookie http.Cookie) {
 	url := fmt.Sprintf("http://localhost:8080/users/%s", userID)
 	req, err := http.NewRequest(http.MethodDelete, url, nil)
 	if err != nil {
@@ -232,6 +242,7 @@ func deleteTestUser(t *testing.T, userID string) {
 	client := http.Client{
 		Timeout: 10 * time.Second,
 	}
+	req.AddCookie(&workoutTestCookie)
 	resp, err := client.Do(req)
 	if err != nil {
 		t.Log(err)
