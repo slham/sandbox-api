@@ -8,8 +8,12 @@ import (
 	"github.com/gorilla/sessions"
 )
 
+var (
+	cookieName = "sandbox-cookie"
+)
+
 type StandardSessionStore struct {
-	Store *sessions.CookieStore
+	cookieStore *sessions.CookieStore
 }
 
 func NewStandardSessionStore() *StandardSessionStore {
@@ -17,12 +21,12 @@ func NewStandardSessionStore() *StandardSessionStore {
 	store := sessions.NewCookieStore(key)
 
 	return &StandardSessionStore{
-		Store: store,
+		cookieStore: store,
 	}
 }
 
 func (store *StandardSessionStore) EstablishSession(w http.ResponseWriter, r *http.Request) {
-	session, err := store.Get(r, "cookie-name")
+	session, err := store.cookieStore.Get(r, cookieName)
 	if err != nil {
 		http.Error(w, "Invalid Credentials", http.StatusUnauthorized)
 		return
@@ -33,7 +37,7 @@ func (store *StandardSessionStore) EstablishSession(w http.ResponseWriter, r *ht
 }
 
 func (store *StandardSessionStore) VerifySession(w http.ResponseWriter, r *http.Request) {
-	session, err := store.Get(r, "cookie-name")
+	session, err := store.cookieStore.Get(r, cookieName)
 	if err != nil {
 		http.Error(w, "Invalid Credentials", http.StatusUnauthorized)
 		return
@@ -48,7 +52,7 @@ func (store *StandardSessionStore) VerifySession(w http.ResponseWriter, r *http.
 }
 
 func (store *StandardSessionStore) TerminateSession(w http.ResponseWriter, r *http.Request) {
-	session, err := store.Store.Get(r, "cookie-name")
+	session, err := store.cookieStore.Get(r, cookieName)
 	if err != nil {
 		http.Error(w, "Invalid Credentials", http.StatusUnauthorized)
 		return

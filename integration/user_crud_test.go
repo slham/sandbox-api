@@ -121,6 +121,7 @@ func TestUser(t *testing.T) {
 		},
 	}
 
+	var testCookie http.Cookie
 	userIDs := []string{}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -135,6 +136,7 @@ func TestUser(t *testing.T) {
 				t.Fail()
 			}
 			req.Header.Set("Content-Type", "application/json")
+			req.AddCookie(&testCookie)
 			client := http.Client{
 				Timeout: 10 * time.Second,
 			}
@@ -145,6 +147,14 @@ func TestUser(t *testing.T) {
 			}
 
 			assert.Equal(t, resp.StatusCode, tc.code)
+
+			cookies := resp.Cookies()
+			for _, cookie := range cookies {
+				if cookie.Name == "sandbox-cookie" {
+					testCookie = *cookie
+					break
+				}
+			}
 
 			if resp.StatusCode == http.StatusNoContent {
 				t.Skipf("skipping test success")
@@ -174,6 +184,7 @@ func TestUser(t *testing.T) {
 						t.Fail()
 					}
 					rq.Header.Set("Content-Type", "application/json")
+					req.AddCookie(&testCookie)
 					resp, err := client.Do(rq)
 					if err != nil {
 						t.Log(err)

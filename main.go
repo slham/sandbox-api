@@ -15,6 +15,7 @@ import (
 	"github.com/slham/sandbox-api/crypt"
 	"github.com/slham/sandbox-api/dao"
 	"github.com/slham/sandbox-api/handler"
+	"github.com/slham/sandbox-api/middlewares"
 	"github.com/slham/toolbelt/l"
 )
 
@@ -45,20 +46,26 @@ func main() {
 
 	// Middlewares
 	standardSessionStore := auth.NewStandardSessionStore()
+	establishSession := middlewares.Establish(standardSessionStore)
+	verifySession := middlewares.Verify(standardSessionStore)
+	//terminateSession := middlewares.Terminate(standardSessionStore)
+	rateLimiter := middlewares.RateLimit(env)
+
 	r.Use(l.Logging)
+	r.Use(rateLimiter)
 
 	// Auth APIs
 	r.Methods("GET").Path("/auth/google/login").HandlerFunc(authController.OauthGoogleLogin)
-	r.Methods("GET").Path("/auth/google/callback").HandlerFunc(authController.OauthGoogleCallback)
-	r.Methods("POST").Path("/login").HandlerFunc(authController.Login)
-	//r.Methods("POST").Path("/logout").HandlerFunc()
+	r.Methods("GET").Path("/auth/google/callback").HandlerFunc(middlewares.Chain(authController.OauthGoogleCallback, establishSession))
+	r.Methods("POST").Path("/login").HandlerFunc(middlewares.Chain(authController.Login, establishSession))
+	//r.Methods("POST").Path("/logout").HandlerFunc(middlewares.Chain(authController.Logout, terminateSession))
 
 	// User APIs
-	r.Methods("POST").Path("/users").HandlerFunc(userController.CreateUser)
-	r.Methods("GET").Path("/users").HandlerFunc(userController.GetUsers)
-	r.Methods("GET").Path("/users/{user_id}").HandlerFunc(userController.GetUser)
-	r.Methods("PATCH").Path("/users/{user_id}").HandlerFunc(userController.UpdateUser)
-	r.Methods("DELETE").Path("/users/{user_id}").HandlerFunc(userController.DeleteUser)
+	r.Methods("POST").Path("/users").HandlerFunc(middlewares.Chain(userController.CreateUser, establishSession)) //TODO: should this be `/register`?
+	r.Methods("GET").Path("/users").HandlerFunc(middlewares.Chain(userController.GetUsers, verifySession))
+	r.Methods("GET").Path("/users/{user_id}").HandlerFunc(middlewares.Chain(userController.GetUser, verifySession))
+	r.Methods("PATCH").Path("/users/{user_id}").HandlerFunc(middlewares.Chain(userController.UpdateUser, verifySession))
+	r.Methods("DELETE").Path("/users/{user_id}").HandlerFunc(middlewares.Chain(userController.DeleteUser, verifySession))
 
 	// Workouts APIs
 	r.Methods("POST").Path("/users/{user_id}/workouts").HandlerFunc(workoutController.CreateWorkout)

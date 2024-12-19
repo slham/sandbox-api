@@ -2,9 +2,11 @@ package middlewares
 
 import (
 	"net/http"
+
+	"github.com/slham/sandbox-api/auth"
 )
 
-func Establish(store *StandardSessionStore) Middleware {
+func Establish(store *auth.StandardSessionStore) Middleware {
 	return func(f http.HandlerFunc) http.HandlerFunc {
 		return func(w http.ResponseWriter, r *http.Request) {
 			store.EstablishSession(w, r)
@@ -13,7 +15,7 @@ func Establish(store *StandardSessionStore) Middleware {
 	}
 }
 
-func Verify(store *StandardSessionStore) Middleware {
+func Verify(store *auth.StandardSessionStore) Middleware {
 	return func(f http.HandlerFunc) http.HandlerFunc {
 		return func(w http.ResponseWriter, r *http.Request) {
 			store.VerifySession(w, r)
@@ -22,7 +24,7 @@ func Verify(store *StandardSessionStore) Middleware {
 	}
 }
 
-func Terminate(store *StandardSessionStore) Middleware {
+func Terminate(store *auth.StandardSessionStore) Middleware {
 	return func(f http.HandlerFunc) http.HandlerFunc {
 		return func(w http.ResponseWriter, r *http.Request) {
 			store.TerminateSession(w, r)
