@@ -18,24 +18,19 @@ func InsertWorkout(ctx context.Context, workout model.Workout) (model.Workout, e
 			id,
 			name,
 			user_id,
-			created,
-			updated,
 			exercises
 		)
 		VALUES(
 			$1,
 			$2,
 			$3,
-			$4,
-			$5,
-			$6
+			$4
 		)`,
 		workout.ID,
 		workout.Name,
 		workout.UserID,
-		workout.Created,
-		workout.Updated,
-		workout.Exercises)
+		workout.Exercises,
+	)
 	if err != nil {
 		if pgErr, ok := err.(*pq.Error); ok {
 			if pgErr.Code == "23505" {
@@ -147,12 +142,12 @@ func GetWorkouts(ctx context.Context, q WorkoutQuery) ([]model.Workout, error) {
 func UpdateWorkout(ctx context.Context, workout model.Workout) error {
 	_, err := getDB().ExecContext(ctx,
 		`UPDATE sandbox.workout
-		SET name = $1, exercises = $2, updated = $3
-		WHERE id = $4`,
+		SET name = $1, exercises = $2
+		WHERE id = $3`,
 		workout.Name,
 		workout.Exercises,
-		workout.Updated,
-		workout.ID)
+		workout.ID,
+	)
 	if err != nil {
 		if pgErr, ok := err.(*pq.Error); ok {
 			if pgErr.Code == "23505" {

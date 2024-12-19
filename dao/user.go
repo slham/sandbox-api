@@ -21,24 +21,19 @@ func InsertUser(ctx context.Context, user model.User) (model.User, error) {
 			id,
 			username,
 			password,
-			email,
-			created,
-			updated
+			email
 		)
 		VALUES(
 			$1,
 			$2,
 			$3,
-			$4,
-			$5,
-			$6
+			$4
 		)`,
 		user.ID,
 		user.Username,
 		user.Password,
 		user.Email,
-		user.Created,
-		user.Updated)
+	)
 	if err != nil {
 		if pgErr, ok := err.(*pq.Error); ok {
 			if pgErr.Code == "23505" {
@@ -172,12 +167,12 @@ func GetUsers(ctx context.Context, q UserQuery) ([]model.User, error) {
 func UpdateUser(ctx context.Context, user model.User) error {
 	_, err := getDB().ExecContext(ctx,
 		`UPDATE sandbox.user 
-		SET username = $1, email = $2, updated = $3
-		WHERE id = $4`,
+		SET username = $1, email = $2
+		WHERE id = $3`,
 		user.Username,
 		user.Email,
-		user.Updated,
-		user.ID)
+		user.ID,
+	)
 	if err != nil {
 		if pgErr, ok := err.(*pq.Error); ok {
 			if pgErr.Code == "23505" {

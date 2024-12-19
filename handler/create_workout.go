@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
-	"time"
 
 	"github.com/gorilla/mux"
 	"github.com/samber/lo"
@@ -68,8 +67,6 @@ func (c *WorkoutController) createWorkout(ctx context.Context, workout model.Wor
 	}
 
 	workout.ID = newWorkoutID()
-	workout.Created = time.Now()
-	workout.Updated = time.Now()
 
 	workout, err := dao.InsertWorkout(ctx, workout)
 	if err != nil {

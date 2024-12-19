@@ -216,14 +216,11 @@ func makeUser(ctx context.Context, userInfo GoogleOAuthUserInfo) (model.User, er
 	if passwordErr != nil {
 		return model.User{}, fmt.Errorf("failed to generate new user password. %w", passwordErr)
 	}
-	now := time.Now()
 	newUser := model.User{
 		ID:       fmt.Sprintf("user_%s", ksuid.New().String()),
 		Username: userInfo.Name,
 		Password: password,
 		Email:    userInfo.Email,
-		Created:  now,
-		Updated:  now,
 	}
 	user, err := dao.InsertUser(ctx, newUser)
 	if err != nil {
