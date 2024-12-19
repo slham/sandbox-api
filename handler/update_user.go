@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
-	"time"
 
 	"github.com/gorilla/mux"
 	"github.com/slham/sandbox-api/dao"
@@ -87,7 +86,6 @@ func (c *UserController) updateUser(ctx context.Context, req updateUserRequest) 
 		user.Email = req.Email
 	}
 
-	user.Updated = time.Now()
 	user.Password = ""
 
 	err = dao.UpdateUser(ctx, user)

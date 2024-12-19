@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
-	"time"
 
 	"github.com/gorilla/mux"
 	"github.com/samber/lo"
@@ -92,7 +91,6 @@ func (c *WorkoutController) updateWorkout(ctx context.Context, req updateWorkout
 
 	workout.Name = req.Name
 	workout.Exercises = req.Exercises
-	workout.Updated = time.Now()
 
 	if err := dao.UpdateWorkout(ctx, workout); err != nil {
 		if errors.Is(err, dao.ErrConflictWorkoutName) {

@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
-	"time"
 
 	"github.com/segmentio/ksuid"
 	"github.com/slham/sandbox-api/crypt"
@@ -72,8 +71,6 @@ func (c *UserController) createUser(ctx context.Context, req createUserRequest) 
 	user.ID = newUserID()
 	user.Username = req.Username
 	user.Email = req.Email
-	user.Created = time.Now()
-	user.Updated = time.Now()
 
 	user, err = dao.InsertUser(ctx, user)
 	if err != nil {

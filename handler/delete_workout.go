@@ -25,7 +25,7 @@ func handleDeleteWorkoutError(w http.ResponseWriter, err error) {
 }
 
 func (c *WorkoutController) DeleteWorkout(w http.ResponseWriter, r *http.Request) {
-	slog.Debug("delete user request")
+	slog.Debug("delete workout request")
 	ctx := r.Context()
 	vars := mux.Vars(r)
 	userID := vars["user_id"]
