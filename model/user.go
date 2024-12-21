@@ -12,4 +12,5 @@ type User struct {
 	IsActive    bool      `json:"isActive,omitempty"`
 	IsSuspended bool      `json:"isSuspended,omitempty"`
 	IsVerified  bool      `json:"isVerified,omitempty"`
+	Roles       []Role    `json:"roles"`
 }

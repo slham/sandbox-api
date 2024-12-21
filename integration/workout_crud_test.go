@@ -186,6 +186,8 @@ func TestWorkout(t *testing.T) {
 			}
 		}
 	}
+
+	deleteTestUser(t, userID, workoutTestCookie)
 }
 
 func createTestUser(t *testing.T) (string, http.Cookie) {
@@ -222,13 +224,14 @@ func createTestUser(t *testing.T) (string, http.Cookie) {
 		t.Fail()
 	}
 
-	respMap := map[string]string{}
+	respMap := map[string]any{}
 	err = json.Unmarshal(bodyBytes, &respMap)
 	if err != nil {
 		t.Log(err)
 		t.Fail()
 	}
-	return respMap["id"], workoutTestCookie
+	userID, _ := respMap["id"].(string)
+	return userID, workoutTestCookie
 }
 
 func deleteTestUser(t *testing.T, userID string, workoutTestCookie http.Cookie) {

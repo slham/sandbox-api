@@ -18,26 +18,26 @@ type getUserRequest struct {
 	ID string
 }
 
-func handleGetUserError(w http.ResponseWriter, err error) {
+func handleGetUserError(ctx context.Context, w http.ResponseWriter, err error) {
 	if errors.Is(err, ApiErrNotFound) {
-		slog.Warn("error getting user by id", "err", err)
+		slog.WarnContext(ctx, "error getting user by id", "err", err)
 		request.RespondWithError(w, http.StatusNotFound, err.Error())
 		return
 	}
-	slog.Error("error getting user by id", "err", err)
+	slog.ErrorContext(ctx, "error getting user by id", "err", err)
 	request.RespondWithError(w, http.StatusInternalServerError, "internal server error")
 }
 
 func (c *UserController) GetUser(w http.ResponseWriter, r *http.Request) {
-	slog.Debug("get user by id request")
 	ctx := r.Context()
+	slog.DebugContext(ctx, "get user by id request")
 	vars := mux.Vars(r)
 	userID := vars["user_id"]
 
 	req := getUserRequest{ID: userID}
 	user, err := c.getUserByID(ctx, req)
 	if err != nil {
-		handleGetUserError(w, err)
+		handleGetUserError(ctx, w, err)
 		return
 	}
 

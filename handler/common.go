@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"context"
 	"errors"
 	"log/slog"
 	"net/url"
@@ -53,7 +54,7 @@ type APIQuery struct {
 	Offset  int
 }
 
-func getStandardQueryParams(query url.Values) (APIQuery, error) {
+func getStandardQueryParams(ctx context.Context, query url.Values) (APIQuery, error) {
 	apiQuery := APIQuery{}
 	if qSortCol := query.Get("sort_column"); qSortCol != "" {
 		apiQuery.SortCol = qSortCol
@@ -64,7 +65,7 @@ func getStandardQueryParams(query url.Values) (APIQuery, error) {
 	if qLimit := query.Get("limit"); qLimit != "" {
 		limit, err := strconv.Atoi(qLimit)
 		if err != nil {
-			slog.Warn("invalid limit", "limit", qLimit)
+			slog.WarnContext(ctx, "invalid limit", "limit", qLimit)
 			return apiQuery, NewApiError(400, ApiErrBadRequest).Append("invalid limit")
 		}
 		apiQuery.Limit = limit
@@ -72,7 +73,7 @@ func getStandardQueryParams(query url.Values) (APIQuery, error) {
 	if qOffset := query.Get("offset"); qOffset != "" {
 		offset, err := strconv.Atoi(qOffset)
 		if err != nil {
-			slog.Warn("invalid offset", "offset", qOffset)
+			slog.WarnContext(ctx, "invalid offset", "offset", qOffset)
 			return apiQuery, NewApiError(400, ApiErrBadRequest).Append("invalid offset")
 		}
 		apiQuery.Offset = offset

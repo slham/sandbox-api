@@ -16,7 +16,6 @@ import (
 	"github.com/slham/sandbox-api/dao"
 	"github.com/slham/sandbox-api/handler"
 	"github.com/slham/sandbox-api/middlewares"
-	"github.com/slham/toolbelt/l"
 )
 
 const (
@@ -28,7 +27,7 @@ func main() {
 	env := os.Getenv("SANDBOX_ENVIRONMENT")
 	switch env {
 	case "LOCAL":
-		if ok := l.Initialize(l.DEBUG); !ok {
+		if ok := middlewares.Initialize(middlewares.DEBUG); !ok {
 			log.Fatalf("failed to initialize logging")
 		}
 		_, err := dao.Connect()
@@ -56,7 +55,7 @@ func main() {
 	//terminateSession := middlewares.Terminate(standardSessionStore)
 	rateLimiter := middlewares.RateLimit(env)
 
-	r.Use(l.Logging)
+	r.Use(middlewares.LoggingInbound)
 	r.Use(rateLimiter)
 
 	// Auth APIs
@@ -81,7 +80,7 @@ func main() {
 
 	srv := &http.Server{
 		Addr:         ":8080", //TODO: YIKES
-		Handler:      r,
+		Handler:      middlewares.LoggingOutbound(r),
 		ReadTimeout:  SERVER_READ_TIMEOUT * time.Second,
 		WriteTimeout: SERVER_WRITE_TIMEOUT * time.Second,
 	}

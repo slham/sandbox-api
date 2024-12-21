@@ -25,7 +25,7 @@ type getUsersRequest struct {
 	query getUsersQuery
 }
 
-func getUserQueryParams(q url.Values) (getUsersQuery, error) {
+func getUserQueryParams(ctx context.Context, q url.Values) (getUsersQuery, error) {
 	guq := getUsersQuery{}
 	if qID := q.Get("id"); qID != "" {
 		guq.ID = qID
@@ -36,7 +36,7 @@ func getUserQueryParams(q url.Values) (getUsersQuery, error) {
 	if qEmail := q.Get("email"); qEmail != "" {
 		guq.Email = qEmail
 	}
-	apiQuery, err := getStandardQueryParams(q)
+	apiQuery, err := getStandardQueryParams(ctx, q)
 	if err != nil {
 		return guq, fmt.Errorf("failed to gather query params. %w", err)
 	}
@@ -44,27 +44,27 @@ func getUserQueryParams(q url.Values) (getUsersQuery, error) {
 	return guq, nil
 }
 
-func handleGetUsersError(w http.ResponseWriter, err error) {
+func handleGetUsersError(ctx context.Context, w http.ResponseWriter, err error) {
 	if errors.Is(err, ApiErrBadRequest) {
-		slog.Warn("error getting users", "err", err)
+		slog.WarnContext(ctx, "error getting users", "err", err)
 		request.RespondWithError(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
-	slog.Error("error getting users", "err", err)
+	slog.ErrorContext(ctx, "error getting users", "err", err)
 	request.RespondWithError(w, http.StatusInternalServerError, "internal server error")
 	return
 }
 
 func (c *UserController) GetUsers(w http.ResponseWriter, r *http.Request) {
-	slog.Debug("get users request")
 	ctx := r.Context()
+	slog.DebugContext(ctx, "get users request")
 	query := r.URL.Query()
 
 	req := getUsersRequest{}
-	q, err := getUserQueryParams(query)
+	q, err := getUserQueryParams(ctx, query)
 	if err != nil {
-		handleGetUsersError(w, err)
+		handleGetUsersError(ctx, w, err)
 		return
 	}
 
@@ -72,7 +72,7 @@ func (c *UserController) GetUsers(w http.ResponseWriter, r *http.Request) {
 
 	users, err := c.getUsers(ctx, req)
 	if err != nil {
-		handleGetUsersError(w, err)
+		handleGetUsersError(ctx, w, err)
 		return
 	}
 

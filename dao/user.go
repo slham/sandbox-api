@@ -48,7 +48,35 @@ func InsertUser(ctx context.Context, user model.User) (model.User, error) {
 		return user, fmt.Errorf("failed to insert user. %w", err)
 	}
 
+	if err := insertUserRoles(ctx, user); err != nil {
+		return user, fmt.Errorf("faild to insert user roles. %w", err)
+	}
+
 	return user, nil
+}
+
+func insertUserRoles(ctx context.Context, user model.User) error {
+	for i := range user.Roles {
+		role := user.Roles[i]
+		if err := insertUserRole(ctx, user.ID, role.ID); err != nil {
+			return fmt.Errorf("failed to insert user role. %w", err)
+		}
+	}
+	return nil
+}
+
+func insertUserRole(ctx context.Context, userID string, roleID int) error {
+	stmt := `
+		INSERT INTO sandbox.user_role
+			(user_id, role_id)
+		VALUES
+			($1, $2)`
+	_, err := getDB().ExecContext(ctx, stmt, userID, roleID)
+	if err != nil {
+		return fmt.Errorf("failed to insert user role. %w", err)
+	}
+
+	return nil
 }
 
 type UserQuery struct {
@@ -116,26 +144,8 @@ func GetUsers(ctx context.Context, q UserQuery) ([]model.User, error) {
 			stmt = fmt.Sprintf("%s %s='%s'", stmt, "email", q.Email)
 		}
 	}
-	if q.SortCol != "" {
-		stmt = fmt.Sprintf("%s ORDER BY %s", stmt, q.SortCol)
-	} else {
-		stmt = fmt.Sprintf("%s ORDER BY id", stmt)
-	}
-	if q.Sort != "" {
-		stmt = fmt.Sprintf("%s %s", stmt, q.Sort)
-	} else {
-		stmt = fmt.Sprintf("%s ASC", stmt)
-	}
-	if q.Limit > 0 {
-		stmt = fmt.Sprintf("%s LIMIT %d", stmt, q.Limit)
-	} else {
-		stmt = fmt.Sprintf("%s LIMIT 100", stmt)
-	}
-	if q.Offset > 0 {
-		stmt = fmt.Sprintf("%s OFFSET %d", stmt, q.Offset)
-	} else {
-		stmt = fmt.Sprintf("%s OFFSET 0", stmt)
-	}
+
+	stmt = addDefaultQuery(stmt, q.Query)
 
 	users := []model.User{}
 	rows, err := getDB().QueryContext(ctx, stmt)

@@ -16,32 +16,32 @@ import (
 	"github.com/slham/sandbox-api/request"
 )
 
-func handleCreateWorkoutError(w http.ResponseWriter, err error) {
+func handleCreateWorkoutError(ctx context.Context, w http.ResponseWriter, err error) {
 	if errors.Is(err, ApiErrBadRequest) {
-		slog.Warn("error creating workout", "err", err)
+		slog.WarnContext(ctx, "error creating workout", "err", err)
 		request.RespondWithError(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
 	if errors.Is(err, ApiErrConflict) {
-		slog.Warn("error creating workout", "err", err)
+		slog.WarnContext(ctx, "error creating workout", "err", err)
 		request.RespondWithError(w, http.StatusConflict, err.Error())
 		return
 	}
 
-	slog.Error("error creating workout", "err", err)
+	slog.ErrorContext(ctx, "error creating workout", "err", err)
 	request.RespondWithError(w, http.StatusInternalServerError, "internal server error")
 }
 
 func (c *WorkoutController) CreateWorkout(w http.ResponseWriter, r *http.Request) {
-	slog.Debug("create workout request")
 	ctx := r.Context()
+	slog.DebugContext(ctx, "create workout request")
 	workout := model.Workout{}
 	vars := mux.Vars(r)
 	userID := vars["user_id"]
 
 	if err := json.NewDecoder(r.Body).Decode(&workout); err != nil {
-		slog.Warn("error decoding create workout request", "err", err)
+		slog.WarnContext(ctx, "error decoding create workout request", "err", err)
 		request.RespondWithError(w, http.StatusBadRequest, "malformed request body")
 		return
 	}
@@ -49,7 +49,7 @@ func (c *WorkoutController) CreateWorkout(w http.ResponseWriter, r *http.Request
 	workout.UserID = userID
 	workout, err := c.createWorkout(ctx, workout)
 	if err != nil {
-		handleCreateWorkoutError(w, err)
+		handleCreateWorkoutError(ctx, w, err)
 		return
 	}
 
@@ -57,7 +57,7 @@ func (c *WorkoutController) CreateWorkout(w http.ResponseWriter, r *http.Request
 }
 
 func (c *WorkoutController) createWorkout(ctx context.Context, workout model.Workout) (model.Workout, error) {
-	slog.Debug("createWorkout", "userID", workout.UserID)
+	slog.DebugContext(ctx, "createWorkout", "userID", workout.UserID)
 	if _, err := dao.GetUserByID(ctx, workout.UserID); err != nil {
 		return workout, NewApiError(404, ApiErrNotFound).Append("user does not exist")
 	}

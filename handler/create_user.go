@@ -23,12 +23,12 @@ type createUserRequest struct {
 }
 
 func (c *UserController) CreateUser(w http.ResponseWriter, r *http.Request) {
-	slog.Debug("create user request")
 	ctx := r.Context()
+	slog.DebugContext(ctx, "create user request")
 	req := createUserRequest{}
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		slog.Warn("error decoding create user request", "err", err)
+		slog.WarnContext(ctx, "error decoding create user request", "err", err)
 		request.RespondWithError(w, http.StatusBadRequest, "malformed request body")
 		return
 	}
@@ -36,18 +36,18 @@ func (c *UserController) CreateUser(w http.ResponseWriter, r *http.Request) {
 	user, err := c.createUser(ctx, req)
 	if err != nil {
 		if errors.Is(err, ApiErrBadRequest) {
-			slog.Warn("error creating user", "err", err)
+			slog.WarnContext(ctx, "error creating user", "err", err)
 			request.RespondWithError(w, http.StatusBadRequest, err.Error())
 			return
 		}
 
 		if errors.Is(err, ApiErrConflict) {
-			slog.Warn("error creating user", "err", err)
+			slog.WarnContext(ctx, "error creating user", "err", err)
 			request.RespondWithError(w, http.StatusConflict, err.Error())
 			return
 		}
 
-		slog.Error("error creating user", "err", err)
+		slog.ErrorContext(ctx, "error creating user", "err", err)
 		request.RespondWithError(w, http.StatusInternalServerError, "internal server error")
 		return
 	}
@@ -68,9 +68,15 @@ func (c *UserController) createUser(ctx context.Context, req createUserRequest) 
 		return user, fmt.Errorf("failed to encrypt password. %w", err)
 	}
 
+	role, err := dao.GetRole(ctx, dao.RoleQuery{Name: "CIVILIAN"})
+	if err != nil {
+		return user, fmt.Errorf("failed to get default user role. %w", err)
+	}
+
 	user.ID = newUserID()
 	user.Username = req.Username
 	user.Email = req.Email
+	user.Roles = []model.Role{role}
 
 	user, err = dao.InsertUser(ctx, user)
 	if err != nil {
