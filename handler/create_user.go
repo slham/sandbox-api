@@ -89,7 +89,18 @@ func (c *UserController) createUser(ctx context.Context, req createUserRequest) 
 		return user, fmt.Errorf("failed to insert user. %w", err)
 	}
 
+	rc := request.GetRequestContext(ctx)
+	rc.UserID = user.ID
+	rc.Roles = make([]string, len(user.Roles))
+	for i := range user.Roles {
+		role := user.Roles[i]
+		rc.Roles[i] = role.Name
+	}
+	ctx = request.WithRequestContext(ctx, rc)
+
 	user.Password = ""
+	user.Roles = []model.Role{}
+
 	return user, nil
 }
 

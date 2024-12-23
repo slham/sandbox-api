@@ -32,3 +32,12 @@ func Terminate(store *auth.StandardSessionStore) Middleware {
 		}
 	}
 }
+
+func Hydrate(store *auth.StandardSessionStore) Middleware {
+	return func(f http.HandlerFunc) http.HandlerFunc {
+		return func(w http.ResponseWriter, r *http.Request) {
+			store.HydrateSession(w, r)
+			f(w, r)
+		}
+	}
+}

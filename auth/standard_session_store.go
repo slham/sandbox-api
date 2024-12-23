@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/gorilla/sessions"
+	"github.com/slham/sandbox-api/request"
 )
 
 var (
@@ -30,7 +31,7 @@ func (store *StandardSessionStore) EstablishSession(w http.ResponseWriter, r *ht
 	session, err := store.cookieStore.Get(r, cookieName)
 	if err != nil {
 		slog.ErrorContext(ctx, "failed to establish session")
-		http.Error(w, "Invalid Credentials", http.StatusUnauthorized)
+		request.RespondWithError(w, http.StatusUnauthorized, "Invalid Credentials")
 		return
 	}
 
@@ -43,13 +44,13 @@ func (store *StandardSessionStore) VerifySession(w http.ResponseWriter, r *http.
 	session, err := store.cookieStore.Get(r, cookieName)
 	if err != nil {
 		slog.ErrorContext(ctx, "failed to verify session")
-		http.Error(w, "Invalid Credentials", http.StatusUnauthorized)
+		request.RespondWithError(w, http.StatusUnauthorized, "Invalid Credentials")
 		return
 	}
 
 	if auth, ok := session.Values["authenticated"].(bool); !ok || !auth {
 		slog.WarnContext(ctx, "INTRUDER!")
-		http.Error(w, "Forbidden", http.StatusForbidden)
+		request.RespondWithError(w, http.StatusForbidden, "Forbidden")
 		return
 	}
 
@@ -61,10 +62,32 @@ func (store *StandardSessionStore) TerminateSession(w http.ResponseWriter, r *ht
 	session, err := store.cookieStore.Get(r, cookieName)
 	if err != nil {
 		slog.ErrorContext(ctx, "failed to terminate session")
-		http.Error(w, "Invalid Credentials", http.StatusUnauthorized)
+		request.RespondWithError(w, http.StatusUnauthorized, "Invalid Credentials")
 		return
 	}
 
 	session.Values["authenticated"] = false
+	session.Save(r, w)
+}
+
+func (store *StandardSessionStore) HydrateSession(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	rc := request.GetRequestContext(ctx)
+	if rc == nil {
+		slog.ErrorContext(ctx, "cannot track user")
+		request.RespondWithError(w, http.StatusUnauthorized, "Invalid Credentials")
+		return
+	}
+
+	session, err := store.cookieStore.Get(r, cookieName)
+	if err != nil {
+		slog.ErrorContext(ctx, "failed to hydrate session")
+		request.RespondWithError(w, http.StatusUnauthorized, "Invalid Credentials")
+		return
+	}
+
+	session.Values["authenticated"] = true
+	session.Values["user_id"] = rc.UserID
+	session.Values["roles"] = rc.Roles
 	session.Save(r, w)
 }

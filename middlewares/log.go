@@ -8,6 +8,7 @@ import (
 	"os"
 
 	"github.com/segmentio/ksuid"
+	"github.com/slham/sandbox-api/request"
 )
 
 type Level string
@@ -81,9 +82,7 @@ func Initialize(lvl Level) bool {
 // Initializes transaction logging
 func LoggingInbound(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		ctx := r.Context()
-		reqID := fmt.Sprintf("%s_%s", "req", ksuid.New())
-		ctx = AppendCtx(ctx, slog.String(requestID, reqID))
+		ctx := initContext(r.Context())
 		r = r.WithContext(ctx)
 
 		slog.DebugContext(ctx, "inbound", "headers", fmt.Sprintf("%v", r.Header))
@@ -98,4 +97,13 @@ func LoggingOutbound(h http.Handler) http.Handler {
 		slog.DebugContext(ctx, "outbound", "headers", fmt.Sprintf("%v", w.Header()))
 		h.ServeHTTP(w, r)
 	})
+}
+
+func initContext(ctx context.Context) context.Context {
+	reqID := fmt.Sprintf("%s_%s", "req", ksuid.New())
+	ctx = AppendCtx(ctx, slog.String(requestID, reqID))
+	rc := request.RequestContext{RequestID: reqID}
+	ctx = request.WithRequestContext(ctx, &rc)
+
+	return ctx
 }
