@@ -13,6 +13,7 @@ require (
 	github.com/segmentio/ksuid v1.0.4
 	github.com/slham/toolbelt v0.0.0-20240415055821-bccf06e6e70f
 	github.com/stretchr/testify v1.9.0
+	github.com/tamathecxder/randomail v1.2.0
 	github.com/throttled/throttled/v2 v2.12.0
 	golang.org/x/oauth2 v0.24.0
 	gopkg.in/go-playground/assert.v1 v1.2.1

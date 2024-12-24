@@ -56,6 +56,8 @@ func (c *AuthController) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	c.hydrateSession(w, r, user)
+
 	request.RespondWithJSON(w, http.StatusNoContent, user)
 }
 
@@ -97,6 +99,33 @@ func validateLoginRequest(ctx context.Context, req LoginRequest) error {
 	if apiErr.HasError() {
 		return apiErr
 	}
+
+	return nil
+}
+
+func (c *AuthController) hydrateSession(w http.ResponseWriter, r *http.Request, user model.User) error {
+	ctx := r.Context()
+	session, err := c.cookieStore.Get(r, "sandbox-cookie")
+	if err != nil {
+		slog.ErrorContext(ctx, "failed to establish session")
+		return fmt.Errorf("failes to establish session. %w", err)
+	}
+
+	rc := request.GetRequestContext(ctx)
+	roles := make([]string, len(user.Roles))
+	for i := range user.Roles {
+		role := user.Roles[i]
+		roles[i] = role.Name
+	}
+
+	rc.UserID = user.ID
+	rc.Roles = roles
+	ctx = request.WithRequestContext(ctx, rc)
+	r = r.WithContext(ctx)
+
+	session.Values["user_id"] = user.ID
+	session.Values["roles"] = roles
+	session.Save(r, w)
 
 	return nil
 }

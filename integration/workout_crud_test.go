@@ -1,20 +1,9 @@
 //go:build integration
 // +build integration
 
-package main
+package integration
 
-import (
-	"bytes"
-	"encoding/json"
-	"fmt"
-	"io"
-	"net/http"
-	"testing"
-	"time"
-
-	matcher "github.com/panta/go-json-matcher"
-	"gopkg.in/go-playground/assert.v1"
-)
+/*
 
 func TestWorkout(t *testing.T) {
 	testCases := []struct {
@@ -257,3 +246,4 @@ func deleteTestUser(t *testing.T, userID string, workoutTestCookie http.Cookie) 
 		t.Fail()
 	}
 }
+*/

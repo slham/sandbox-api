@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/gorilla/mux"
 	"github.com/segmentio/ksuid"
 	"github.com/slham/sandbox-api/request"
 )
@@ -82,7 +83,7 @@ func Initialize(lvl Level) bool {
 // Initializes transaction logging
 func LoggingInbound(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		ctx := initContext(r.Context())
+		ctx := initContext(r)
 		r = r.WithContext(ctx)
 
 		slog.DebugContext(ctx, "inbound", "headers", fmt.Sprintf("%v", r.Header))
@@ -99,11 +100,22 @@ func LoggingOutbound(h http.Handler) http.Handler {
 	})
 }
 
-func initContext(ctx context.Context) context.Context {
+func initContext(r *http.Request) context.Context {
+	ctx := r.Context()
+	vars := mux.Vars(r)
+	clientUserID := vars["user_id"]
+	if clientUserID != "" {
+		ctx = AppendCtx(ctx, slog.String("client_user_id", clientUserID))
+	}
 	reqID := fmt.Sprintf("%s_%s", "req", ksuid.New())
 	ctx = AppendCtx(ctx, slog.String(requestID, reqID))
-	rc := request.RequestContext{RequestID: reqID}
-	ctx = request.WithRequestContext(ctx, &rc)
+	rc := request.GetRequestContext(ctx)
+	if rc == nil {
+		rc = &request.RequestContext{}
+	}
+	rc.RequestID = reqID
+	rc.ClientUserID = clientUserID
+	ctx = request.WithRequestContext(ctx, rc)
 
 	return ctx
 }
