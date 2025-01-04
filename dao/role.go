@@ -67,7 +67,7 @@ func GetUserRoles(ctx context.Context, userID string) ([]model.Role, error) {
 			u.id = $1`
 
 	roles := []model.Role{}
-	rows, err := getDB().QueryContext(ctx, stmt)
+	rows, err := getDB().QueryContext(ctx, stmt, userID)
 	if err != nil {
 		return roles, fmt.Errorf("failed to query roles. %w", err)
 	}

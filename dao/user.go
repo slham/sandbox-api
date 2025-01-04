@@ -168,6 +168,11 @@ func GetUsers(ctx context.Context, q UserQuery) ([]model.User, error) {
 		if q.HidePassword {
 			user.Password = ""
 		}
+		roles, err := GetUserRoles(ctx, user.ID)
+		if err != nil {
+			return users, fmt.Errorf("failed to get user (%s) roles. %w", user.ID, err)
+		}
+		user.Roles = roles
 		users = append(users, user)
 	}
 

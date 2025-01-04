@@ -64,9 +64,12 @@ func (store *StandardSessionStore) VerifySession(w http.ResponseWriter, r *http.
 		return
 	}
 
-	roles, ok := session.Values["user_id"].([]string)
+	roles, ok := session.Values["roles"].([]string)
 	if !ok || roles == nil {
-		slog.ErrorContext(ctx, "INTRUDER!", "session_roles", roles)
+		for k, v := range session.Values {
+			slog.DebugContext(ctx, "session value", k, v)
+		}
+		slog.ErrorContext(ctx, "INTRUDER!", "session_roles", roles, "ok", ok)
 		r = stop(r, ctx)
 		http.Error(w, "Forbidden", http.StatusForbidden)
 		return
@@ -74,7 +77,10 @@ func (store *StandardSessionStore) VerifySession(w http.ResponseWriter, r *http.
 
 	sessionUserID, ok := session.Values["user_id"].(string)
 	if !ok || sessionUserID == "" {
-		slog.ErrorContext(ctx, "INTRUDER!", "session_user_id", sessionUserID)
+		for k, v := range session.Values {
+			slog.DebugContext(ctx, "session value", k, v)
+		}
+		slog.ErrorContext(ctx, "INTRUDER!", "session_user_id", sessionUserID, "ok", ok)
 		r = stop(r, ctx)
 		http.Error(w, "Forbidden", http.StatusForbidden)
 		return
@@ -83,7 +89,7 @@ func (store *StandardSessionStore) VerifySession(w http.ResponseWriter, r *http.
 	vars := mux.Vars(r)
 	userID := vars["user_id"]
 
-	if userID != "" && userID != sessionUserID || !isAdmin(roles) {
+	if userID != "" && userID != sessionUserID && !isAdmin(roles) {
 		slog.ErrorContext(ctx, "INTRUDER!", "session_user_id", sessionUserID, "client_user_id", userID)
 		r = stop(r, ctx)
 		http.Error(w, "FUCK OFF!", http.StatusForbidden)

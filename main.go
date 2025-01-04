@@ -45,7 +45,7 @@ func main() {
 
 	// Middlewares
 	standardSessionStore := auth.NewStandardSessionStore()
-	establishSession := middlewares.Establish(standardSessionStore)
+	//establishSession := middlewares.Establish(standardSessionStore)
 	verifySession := middlewares.Verify(standardSessionStore)
 	//terminateSession := middlewares.Terminate(standardSessionStore)
 	rateLimiter := middlewares.RateLimit(env)
@@ -60,12 +60,12 @@ func main() {
 
 	// Auth APIs
 	r.Methods("GET").Path("/auth/google/login").HandlerFunc(authController.OauthGoogleLogin)
-	r.Methods("GET").Path("/auth/google/callback").HandlerFunc(middlewares.Chain(authController.OauthGoogleCallback, establishSession))
-	r.Methods("POST").Path("/auth/login").HandlerFunc(middlewares.Chain(authController.Login, establishSession))
+	r.Methods("GET").Path("/auth/google/callback").HandlerFunc(middlewares.Chain(authController.OauthGoogleCallback))
+	r.Methods("POST").Path("/auth/login").HandlerFunc(middlewares.Chain(authController.Login))
 	//r.Methods("POST").Path("/logout").HandlerFunc(middlewares.Chain(authController.Logout, terminateSession))
 
 	// User APIs
-	r.Methods("POST").Path("/users").HandlerFunc(middlewares.Chain(userController.CreateUser, establishSession))
+	r.Methods("POST").Path("/users").HandlerFunc(middlewares.Chain(userController.CreateUser))
 	r.Methods("GET").Path("/users").HandlerFunc(middlewares.Chain(userController.GetUsers, verifySession))
 	r.Methods("GET").Path("/users/{user_id}").HandlerFunc(middlewares.Chain(userController.GetUser, verifySession))
 	r.Methods("PATCH").Path("/users/{user_id}").HandlerFunc(middlewares.Chain(userController.UpdateUser, verifySession))

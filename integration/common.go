@@ -2,6 +2,7 @@ package integration
 
 import (
 	"bytes"
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -13,11 +14,13 @@ import (
 	"github.com/tamathecxder/randomail"
 )
 
+var testDB *sql.DB
+
 func createTestUser(username, email string) (string, error) {
 	url := "http://localhost:8080/users"
 	method := "POST"
 	body := fmt.Sprintf(`{"username": "%s", "password": "thisIsAG00dPassword!", "email": "%s"}`, username, email)
-	resp, err := sendJSONHttpRequest(method, url, body)
+	resp, err := sendJSONHttpRequest(method, url, body, nil)
 	if err != nil {
 		return "", fmt.Errorf("failed to execute request. %w", err)
 	}
@@ -49,7 +52,7 @@ func loginTestUser(username string) (*http.Cookie, error) {
 	url := "http://localhost:8080/auth/login"
 	method := "POST"
 	body := fmt.Sprintf(`{"username": "%s", "password": "thisIsAG00dPassword!"}`, username)
-	resp, err := sendJSONHttpRequest(method, url, body)
+	resp, err := sendJSONHttpRequest(method, url, body, nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to execute request. %w", err)
 	}
@@ -57,6 +60,8 @@ func loginTestUser(username string) (*http.Cookie, error) {
 	if resp.StatusCode != http.StatusNoContent {
 		return nil, fmt.Errorf("failed to create test user. %w", err)
 	}
+
+	fmt.Println("resp headers", resp.Header)
 
 	var testCookie *http.Cookie
 	cookies := resp.Cookies()
@@ -70,11 +75,28 @@ func loginTestUser(username string) (*http.Cookie, error) {
 	return testCookie, nil
 }
 
-func cleanUpTestUsers(suffix string) error {
-	db := dao.GetDao().DB
-	stmt := fmt.Sprintf("DELETE FROM sandbox.user WHERE username LIKE '%%%s'", suffix)
+func getDB() (*sql.DB, error) {
+	if testDB != nil {
+		return testDB, nil
+	}
 
-	_, err := db.Exec(stmt, suffix)
+	database, err := dao.Connect()
+	if err != nil {
+		return nil, fmt.Errorf("failed to connect to database. %w", err)
+	}
+
+	return database.DB, nil
+}
+
+func cleanUpTestUsers(suffix string) error {
+	db, err := getDB()
+	if err != nil {
+		return fmt.Errorf("failed to get test db. %w", err)
+	}
+
+	stmt := "DELETE FROM sandbox.user WHERE username LIKE '%" + suffix + "'"
+
+	_, err = db.Exec(stmt)
 	if err != nil {
 		return fmt.Errorf("failed to clean up %s text users. %w", suffix, err)
 	}
@@ -82,13 +104,16 @@ func cleanUpTestUsers(suffix string) error {
 	return nil
 }
 
-func sendJSONHttpRequest(method, url, body string) (*http.Response, error) {
+func sendJSONHttpRequest(method, url, body string, testCookie *http.Cookie) (*http.Response, error) {
 	bodyReader := bytes.NewReader([]byte(body))
 	req, err := http.NewRequest(method, url, bodyReader)
 	if err != nil {
 		return nil, fmt.Errorf("failed to build request. %w", err)
 	}
 	req.Header.Set("Content-Type", "application/json")
+	if testCookie != nil {
+		req.AddCookie(testCookie)
+	}
 	client := http.Client{
 		Timeout: 10 * time.Second,
 	}

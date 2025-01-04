@@ -123,6 +123,8 @@ func (c *AuthController) hydrateSession(w http.ResponseWriter, r *http.Request, 
 	ctx = request.WithRequestContext(ctx, rc)
 	r = r.WithContext(ctx)
 
+	slog.DebugContext(ctx, "HYDRATING SESSION", "user_id", user.ID, "roles", roles)
+	session.Values["authenticated"] = true
 	session.Values["user_id"] = user.ID
 	session.Values["roles"] = roles
 	session.Save(r, w)
