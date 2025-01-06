@@ -61,8 +61,6 @@ func loginTestUser(username string) (*http.Cookie, error) {
 		return nil, fmt.Errorf("failed to create test user. %w", err)
 	}
 
-	fmt.Println("resp headers", resp.Header)
-
 	var testCookie *http.Cookie
 	cookies := resp.Cookies()
 	for _, cookie := range cookies {

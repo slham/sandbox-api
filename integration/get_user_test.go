@@ -69,4 +69,6 @@ func TestGetUser(t *testing.T) {
 			}
 		})
 	}
+
+	cleanUpTestUsers(suffix)
 }
