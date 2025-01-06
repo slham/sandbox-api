@@ -21,7 +21,7 @@ int_cover:
 	go test -v -count=1 -tags=integration -cover ./...
 
 int_cover_see:
-	go tool covdata percent -i=./integration
+	go tool covdata percent -i=./integration/coverage
 
 lint:
 	golangci-lint run --enable-all
