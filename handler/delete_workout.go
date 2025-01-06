@@ -18,15 +18,15 @@ type deleteWorkoutRequest struct {
 	WorkoutID string
 }
 
-func handleDeleteWorkoutError(w http.ResponseWriter, err error) {
-	slog.Error("error deleting workout", "err", err)
+func handleDeleteWorkoutError(ctx context.Context, w http.ResponseWriter, err error) {
+	slog.ErrorContext(ctx, "error deleting workout", "err", err)
 	request.RespondWithError(w, http.StatusInternalServerError, "internal server error")
 	return
 }
 
 func (c *WorkoutController) DeleteWorkout(w http.ResponseWriter, r *http.Request) {
-	slog.Debug("delete workout request")
 	ctx := r.Context()
+	slog.DebugContext(ctx, "delete workout request")
 	vars := mux.Vars(r)
 	userID := vars["user_id"]
 	workoutID := vars["workout_id"]
@@ -37,7 +37,7 @@ func (c *WorkoutController) DeleteWorkout(w http.ResponseWriter, r *http.Request
 
 	err := c.deleteWorkout(ctx, req)
 	if err != nil {
-		handleDeleteWorkoutError(w, err)
+		handleDeleteWorkoutError(ctx, w, err)
 		return
 	}
 

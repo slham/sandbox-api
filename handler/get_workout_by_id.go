@@ -19,19 +19,19 @@ type getWorkoutRequest struct {
 	WorkoutID string
 }
 
-func handleGetWorkoutError(w http.ResponseWriter, err error) {
+func handleGetWorkoutError(ctx context.Context, w http.ResponseWriter, err error) {
 	if errors.Is(err, ApiErrNotFound) {
-		slog.Warn("error getting workout by id", "err", err)
+		slog.WarnContext(ctx, "error getting workout by id", "err", err)
 		request.RespondWithError(w, http.StatusNotFound, err.Error())
 		return
 	}
-	slog.Error("error getting workout by id", "err", err)
+	slog.ErrorContext(ctx, "error getting workout by id", "err", err)
 	request.RespondWithError(w, http.StatusInternalServerError, "internal server error")
 }
 
 func (c *WorkoutController) GetWorkout(w http.ResponseWriter, r *http.Request) {
-	slog.Debug("get workout by id request")
 	ctx := r.Context()
+	slog.DebugContext(ctx, "get workout by id request")
 	vars := mux.Vars(r)
 	userID := vars["user_id"]
 	workoutID := vars["workout_id"]
@@ -39,7 +39,7 @@ func (c *WorkoutController) GetWorkout(w http.ResponseWriter, r *http.Request) {
 	req := getWorkoutRequest{UserID: userID, WorkoutID: workoutID}
 	workout, err := c.getWorkoutByID(ctx, req)
 	if err != nil {
-		handleGetWorkoutError(w, err)
+		handleGetWorkoutError(ctx, w, err)
 		return
 	}
 

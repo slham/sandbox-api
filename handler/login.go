@@ -19,42 +19,44 @@ type LoginRequest struct {
 	Password string `json:"password"`
 }
 
-func handleLoginError(w http.ResponseWriter, err error) {
+func handleLoginError(ctx context.Context, w http.ResponseWriter, err error) {
 	if errors.Is(err, ApiErrBadRequest) {
-		slog.Warn("error login", "err", err)
+		slog.WarnContext(ctx, "error login", "err", err)
 		request.RespondWithError(w, http.StatusBadRequest, err.Error())
 		return
 	} else if errors.Is(err, ApiErrConflict) {
-		slog.Error("user already exists", "err", err)
+		slog.ErrorContext(ctx, "user already exists", "err", err)
 		request.RespondWithError(w, http.StatusConflict, err.Error())
 		return
 	} else if errors.Is(err, ApiErrForbidden) {
-		slog.Error("unauthenticated login attempt", "err", err)
+		slog.ErrorContext(ctx, "unauthenticated login attempt", "err", err)
 		request.RespondWithError(w, http.StatusForbidden, err.Error())
 		return
 	}
 
-	slog.Error("error login", "err", err)
+	slog.ErrorContext(ctx, "error login", "err", err)
 	request.RespondWithError(w, http.StatusInternalServerError, "internal server error")
 	return
 }
 
 func (c *AuthController) Login(w http.ResponseWriter, r *http.Request) {
-	slog.Debug("login request")
 	ctx := r.Context()
+	slog.DebugContext(ctx, "login request")
 	loginRequest := LoginRequest{}
 
 	if err := json.NewDecoder(r.Body).Decode(&loginRequest); err != nil {
-		slog.Warn("error decoding login request", "err", err)
+		slog.WarnContext(ctx, "error decoding login request", "err", err)
 		request.RespondWithError(w, http.StatusBadRequest, "malformed request body")
 		return
 	}
 
 	user, err := handleLogin(ctx, loginRequest)
 	if err != nil {
-		handleLoginError(w, err)
+		handleLoginError(ctx, w, err)
 		return
 	}
+
+	c.hydrateSession(w, r, user)
 
 	request.RespondWithJSON(w, http.StatusNoContent, user)
 }
@@ -75,7 +77,7 @@ func handleLogin(ctx context.Context, req LoginRequest) (model.User, error) {
 	}
 
 	if plainText != req.Password {
-		slog.Warn("failed login attempt for user", "user_id", user.ID)
+		slog.WarnContext(ctx, "failed login attempt for user", "user_id", user.ID)
 		return user, NewApiError(403, ApiErrForbidden)
 	}
 
@@ -97,6 +99,35 @@ func validateLoginRequest(ctx context.Context, req LoginRequest) error {
 	if apiErr.HasError() {
 		return apiErr
 	}
+
+	return nil
+}
+
+func (c *AuthController) hydrateSession(w http.ResponseWriter, r *http.Request, user model.User) error {
+	ctx := r.Context()
+	session, err := c.cookieStore.Get(r, "sandbox-cookie")
+	if err != nil {
+		slog.ErrorContext(ctx, "failed to establish session")
+		return fmt.Errorf("failes to establish session. %w", err)
+	}
+
+	rc := request.GetRequestContext(ctx)
+	roles := make([]string, len(user.Roles))
+	for i := range user.Roles {
+		role := user.Roles[i]
+		roles[i] = role.Name
+	}
+
+	rc.UserID = user.ID
+	rc.Roles = roles
+	ctx = request.WithRequestContext(ctx, rc)
+	r = r.WithContext(ctx)
+
+	slog.DebugContext(ctx, "HYDRATING SESSION", "user_id", user.ID, "roles", roles)
+	session.Values["authenticated"] = true
+	session.Values["user_id"] = user.ID
+	session.Values["roles"] = roles
+	session.Save(r, w)
 
 	return nil
 }

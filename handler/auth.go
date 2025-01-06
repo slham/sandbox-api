@@ -1,21 +1,20 @@
 package handler
 
 import (
-	"database/sql"
-
-	"github.com/slham/sandbox-api/dao"
+	"github.com/gorilla/sessions"
+	"github.com/slham/sandbox-api/auth"
 )
 
 type AuthController struct {
-	DB dao.Dao
+	cookieStore *sessions.CookieStore
 }
 
-func NewAuthController() AuthController {
+func NewAuthController(store *auth.StandardSessionStore) AuthController {
 	return AuthController{
-		DB: dao.GetDao(),
+		cookieStore: store.GetCookieStore(),
 	}
 }
 
-func (c *AuthController) GetDB() *sql.DB {
-	return c.DB.DB
+func (c *AuthController) GetCookieStore() *sessions.CookieStore {
+	return c.cookieStore
 }

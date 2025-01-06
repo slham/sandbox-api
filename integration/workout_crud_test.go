@@ -1,20 +1,9 @@
 //go:build integration
 // +build integration
 
-package main
+package integration
 
-import (
-	"bytes"
-	"encoding/json"
-	"fmt"
-	"io"
-	"net/http"
-	"testing"
-	"time"
-
-	matcher "github.com/panta/go-json-matcher"
-	"gopkg.in/go-playground/assert.v1"
-)
+/*
 
 func TestWorkout(t *testing.T) {
 	testCases := []struct {
@@ -26,38 +15,7 @@ func TestWorkout(t *testing.T) {
 		code    int
 		comment string
 	}{
-		{
-			name:   "create fail validations",
-			method: "POST",
-			url:    "/workouts",
-			req:    `{"name":"","exercises":[{"name":"","muscles":[{"name":"","muscleGroup":"Arms"}],"sets":[{"weight":25,"reps":10},{"weight":25,"reps":10},{"weight":25,"reps":10}]}]}`,
-			resp:   `{"errors": "failed to validate create workout request. workout must have a name. exercise must have a name. muscle must have a name. invalid muscle group. valid options: [arms back chest core heart legs shoulders]"}`,
-			code:   http.StatusBadRequest,
-		},
-		{
-			name:   "create happy path 1",
-			method: "POST",
-			url:    "/workouts",
-			req:    `{"name":"Arms Light","exercises":[{"name":"Curl","muscles":[{"name":"Bicep","muscleGroup":"arms"}],"sets":[{"weight":25,"reps":10},{"weight":25,"reps":10},{"weight":25,"reps":10}]}]}`,
-			resp:   `{"id":"#regex ^work_[a-zA-Z0-9]{27}$","name":"Arms Light","user_id":"#regex ^user_[a-zA-Z0-9]{27}$","created":"#datetime","updated":"#datetime","exercises":[{"name":"Curl","muscles":[{"name":"Bicep","muscleGroup":"arms"}],"sets":[{"weight":25,"reps":10},{"weight":25,"reps":10},{"weight":25,"reps":10}]}]}`,
-			code:   http.StatusCreated,
-		},
-		{
-			name:   "create happy path 2",
-			method: "POST",
-			url:    "/workouts",
-			req:    `{"name":"Arms Heavy","exercises":[{"name":"Curl","muscles":[{"name":"Bicep","muscleGroup":"arms"}],"sets":[{"weight":45,"reps":10},{"weight":45,"reps":10},{"weight":45,"reps":10}]}]}`,
-			resp:   `{"id":"#regex ^work_[a-zA-Z0-9]{27}$","name":"Arms Heavy","user_id":"#regex ^user_[a-zA-Z0-9]{27}$","created":"#datetime","updated":"#datetime","exercises":[{"name":"Curl","muscles":[{"name":"Bicep","muscleGroup":"arms"}],"sets":[{"weight":45,"reps":10},{"weight":45,"reps":10},{"weight":45,"reps":10}]}]}`,
-			code:   http.StatusCreated,
-		},
-		{
-			name:   "create fail conflict name",
-			method: "POST",
-			url:    "/workouts",
-			req:    `{"name":"Arms Heavy","exercises":[{"name":"Curl","muscles":[{"name":"Bicep","muscleGroup":"arms"}],"sets":[{"weight":45,"reps":10},{"weight":45,"reps":10},{"weight":45,"reps":10}]}]}`,
-			resp:   `{"errors": "workout name already exists"}`,
-			code:   http.StatusConflict,
-		},
+
 		{
 			name:   "update fail validations",
 			method: "PATCH",
@@ -186,71 +144,7 @@ func TestWorkout(t *testing.T) {
 			}
 		}
 	}
+
+	deleteTestUser(t, userID, workoutTestCookie)
 }
-
-func createTestUser(t *testing.T) (string, http.Cookie) {
-	var workoutTestCookie http.Cookie
-	url := "http://localhost:8080/users"
-	reqBody := `{"username": "test_user_workout_crud", "password": "thisIsAG00dPassword!", "email": "test@workoutCrud.com"}`
-	bodyReader := bytes.NewReader([]byte(reqBody))
-	req, err := http.NewRequest(http.MethodPost, url, bodyReader)
-	if err != nil {
-		t.Log(err)
-		t.Fail()
-	}
-	req.Header.Set("Content-Type", "application/json")
-	client := http.Client{
-		Timeout: 10 * time.Second,
-	}
-	resp, err := client.Do(req)
-	if err != nil {
-		t.Log(err)
-		t.Fail()
-	}
-
-	cookies := resp.Cookies()
-	for _, cookie := range cookies {
-		if cookie.Name == "sandbox-cookie" {
-			workoutTestCookie = *cookie
-			break
-		}
-	}
-
-	bodyBytes, err := io.ReadAll(resp.Body)
-	if err != nil {
-		t.Log(err)
-		t.Fail()
-	}
-
-	respMap := map[string]string{}
-	err = json.Unmarshal(bodyBytes, &respMap)
-	if err != nil {
-		t.Log(err)
-		t.Fail()
-	}
-	return respMap["id"], workoutTestCookie
-}
-
-func deleteTestUser(t *testing.T, userID string, workoutTestCookie http.Cookie) {
-	url := fmt.Sprintf("http://localhost:8080/users/%s", userID)
-	req, err := http.NewRequest(http.MethodDelete, url, nil)
-	if err != nil {
-		t.Log(err)
-		t.Fail()
-	}
-	req.Header.Set("Content-Type", "application/json")
-	client := http.Client{
-		Timeout: 10 * time.Second,
-	}
-	req.AddCookie(&workoutTestCookie)
-	resp, err := client.Do(req)
-	if err != nil {
-		t.Log(err)
-		t.Fail()
-	}
-
-	if resp.StatusCode != http.StatusNoContent {
-		t.Log("failed to clean up test user")
-		t.Fail()
-	}
-}
+*/

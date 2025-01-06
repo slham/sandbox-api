@@ -55,18 +55,18 @@ type GoogleOAuthUserInfo struct {
 	Picture       string `json:"picture"`
 }
 
-func handleOauthGoogleError(w http.ResponseWriter, err error) {
+func handleOauthGoogleError(ctx context.Context, w http.ResponseWriter, err error) {
 	if errors.Is(err, ApiErrBadRequest) {
-		slog.Warn("error oauth google", "err", err)
+		slog.WarnContext(ctx, "error oauth google", "err", err)
 		request.RespondWithError(w, http.StatusBadRequest, err.Error())
 		return
 	} else if errors.Is(err, ApiErrConflict) {
-		slog.Error("user already exists", "err", err)
+		slog.ErrorContext(ctx, "user already exists", "err", err)
 		request.RespondWithError(w, http.StatusConflict, err.Error())
 		return
 	}
 
-	slog.Error("error oauth google", "err", err)
+	slog.ErrorContext(ctx, "error oauth google", "err", err)
 	request.RespondWithError(w, http.StatusInternalServerError, "internal server error")
 	return
 }
@@ -91,8 +91,8 @@ func (c *AuthController) OauthGoogleCallback(w http.ResponseWriter, r *http.Requ
 
 	oauthState, err := r.Cookie("oauthstate")
 	if err != nil {
-		slog.Error("failed to read oauthstate cookie", "err", err)
-		handleOauthGoogleError(w, err)
+		slog.ErrorContext(ctx, "failed to read oauthstate cookie", "err", err)
+		handleOauthGoogleError(ctx, w, err)
 		return
 	}
 
@@ -100,29 +100,29 @@ func (c *AuthController) OauthGoogleCallback(w http.ResponseWriter, r *http.Requ
 	code := r.FormValue("code")
 
 	if state != oauthState.Value {
-		slog.Error("invalid oauth google state", "have", state, "wanted", oauthState.Value)
-		handleOauthGoogleError(w, err)
+		slog.ErrorContext(ctx, "invalid oauth google state", "have", state, "wanted", oauthState.Value)
+		handleOauthGoogleError(ctx, w, err)
 		return
 	}
 
 	data, err := getUserDataFromGoogle(ctx, code)
 	if err != nil {
-		slog.Error("failed to get user data from google", "err", err)
-		handleOauthGoogleError(w, err)
+		slog.ErrorContext(ctx, "failed to get user data from google", "err", err)
+		handleOauthGoogleError(ctx, w, err)
 		return
 	}
 
 	userInfo := GoogleOAuthUserInfo{}
 	if err := json.Unmarshal(data, &userInfo); err != nil {
-		slog.Error("failed to unmarshal user data", "err", err)
-		handleOauthGoogleError(w, err)
+		slog.ErrorContext(ctx, "failed to unmarshal user data", "err", err)
+		handleOauthGoogleError(ctx, w, err)
 		return
 	}
 
 	_, err = oauthFlowMap[oauthFlow](ctx, userInfo)
 	if err != nil {
-		slog.Error("failed to check user", "err", err)
-		handleOauthGoogleError(w, err)
+		slog.ErrorContext(ctx, "failed to check user", "err", err)
+		handleOauthGoogleError(ctx, w, err)
 		return
 	}
 	//TODO: set up user session

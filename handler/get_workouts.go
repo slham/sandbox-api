@@ -24,9 +24,9 @@ type getWorkoutsRequest struct {
 	query  getWorkoutsQuery
 }
 
-func getWorkoutsQueryParams(q url.Values) (getWorkoutsQuery, error) {
+func getWorkoutsQueryParams(ctx context.Context, q url.Values) (getWorkoutsQuery, error) {
 	gwq := getWorkoutsQuery{}
-	apiQuery, err := getStandardQueryParams(q)
+	apiQuery, err := getStandardQueryParams(ctx, q)
 	if err != nil {
 		return gwq, fmt.Errorf("failed to gather query params. %w", err)
 	}
@@ -34,28 +34,28 @@ func getWorkoutsQueryParams(q url.Values) (getWorkoutsQuery, error) {
 	return gwq, nil
 }
 
-func handleGetWorkoutsError(w http.ResponseWriter, err error) {
+func handleGetWorkoutsError(ctx context.Context, w http.ResponseWriter, err error) {
 	if errors.Is(err, ApiErrBadRequest) {
-		slog.Warn("error getting workouts", "err", err)
+		slog.WarnContext(ctx, "error getting workouts", "err", err)
 		request.RespondWithError(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
-	slog.Error("error getting workouts", "err", err)
+	slog.ErrorContext(ctx, "error getting workouts", "err", err)
 	request.RespondWithError(w, http.StatusInternalServerError, "internal server error")
 	return
 }
 
 func (c *WorkoutController) GetWorkouts(w http.ResponseWriter, r *http.Request) {
-	slog.Debug("get workouts request")
 	ctx := r.Context()
+	slog.DebugContext(ctx, "get workouts request")
 	vars := mux.Vars(r)
 	userID := vars["user_id"]
 	req := getWorkoutsRequest{userID: userID}
 	query := r.URL.Query()
-	q, err := getWorkoutsQueryParams(query)
+	q, err := getWorkoutsQueryParams(ctx, query)
 	if err != nil {
-		handleGetWorkoutsError(w, err)
+		handleGetWorkoutsError(ctx, w, err)
 		return
 	}
 
@@ -63,7 +63,7 @@ func (c *WorkoutController) GetWorkouts(w http.ResponseWriter, r *http.Request) 
 
 	workouts, err := c.getWorkouts(ctx, req)
 	if err != nil {
-		handleGetWorkoutsError(w, err)
+		handleGetWorkoutsError(ctx, w, err)
 		return
 	}
 

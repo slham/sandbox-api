@@ -22,27 +22,27 @@ type updateWorkoutRequest struct {
 	Exercises model.Exercises `json:"exercises"`
 }
 
-func handleUpdateWorkoutError(w http.ResponseWriter, err error) {
+func handleUpdateWorkoutError(ctx context.Context, w http.ResponseWriter, err error) {
 	if errors.Is(err, ApiErrBadRequest) {
-		slog.Warn("error creating workout", "err", err)
+		slog.WarnContext(ctx, "error creating workout", "err", err)
 		request.RespondWithError(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
 	if errors.Is(err, ApiErrConflict) {
-		slog.Warn("error creating workout", "err", err)
+		slog.WarnContext(ctx, "error creating workout", "err", err)
 		request.RespondWithError(w, http.StatusConflict, err.Error())
 		return
 	}
 
-	slog.Error("error creating workout", "err", err)
+	slog.ErrorContext(ctx, "error creating workout", "err", err)
 	request.RespondWithError(w, http.StatusInternalServerError, "internal server error")
 	return
 }
 
 func (c *WorkoutController) UpdateWorkout(w http.ResponseWriter, r *http.Request) {
-	slog.Debug("update workout request")
 	ctx := r.Context()
+	slog.DebugContext(ctx, "update workout request")
 	req := updateWorkoutRequest{}
 	vars := mux.Vars(r)
 	userID := vars["user_id"]
@@ -51,20 +51,20 @@ func (c *WorkoutController) UpdateWorkout(w http.ResponseWriter, r *http.Request
 	req.WorkoutID = workoutID
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		slog.Warn("error decoding create workout request", "err", err)
+		slog.WarnContext(ctx, "error decoding create workout request", "err", err)
 		request.RespondWithError(w, http.StatusBadRequest, "malformed request body")
 		return
 	}
 
 	if req.UserID != userID {
-		slog.Warn("user not allowed to modify this workout")
+		slog.WarnContext(ctx, "user not allowed to modify this workout")
 		request.RespondWithError(w, http.StatusUnauthorized, "UNAUTHORIZED")
 		return
 	}
 
 	workout, err := c.updateWorkout(ctx, req)
 	if err != nil {
-		handleUpdateWorkoutError(w, err)
+		handleUpdateWorkoutError(ctx, w, err)
 		return
 	}
 

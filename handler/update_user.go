@@ -22,33 +22,33 @@ type updateUserRequest struct {
 	Email    string `json:"email"`
 }
 
-func handleUpdateUserError(w http.ResponseWriter, err error) {
+func handleUpdateUserError(ctx context.Context, w http.ResponseWriter, err error) {
 	if errors.Is(err, ApiErrBadRequest) {
-		slog.Warn("error updating user", "err", err)
+		slog.WarnContext(ctx, "error updating user", "err", err)
 		request.RespondWithError(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
 	if errors.Is(err, ApiErrConflict) {
-		slog.Warn("error updating user", "err", err)
+		slog.WarnContext(ctx, "error updating user", "err", err)
 		request.RespondWithError(w, http.StatusConflict, err.Error())
 		return
 	}
 
-	slog.Error("error updating user", "err", err)
+	slog.ErrorContext(ctx, "error updating user", "err", err)
 	request.RespondWithError(w, http.StatusInternalServerError, "internal server error")
 	return
 }
 
 func (c *UserController) UpdateUser(w http.ResponseWriter, r *http.Request) {
-	slog.Debug("update user request")
 	ctx := r.Context()
+	slog.DebugContext(ctx, "update user request")
 	req := updateUserRequest{}
 	vars := mux.Vars(r)
 	userID := vars["user_id"]
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		slog.Warn("error decoding update user request", "err", err)
+		slog.WarnContext(ctx, "error decoding update user request", "err", err)
 		request.RespondWithError(w, http.StatusBadRequest, "malformed request body")
 		return
 	}
@@ -57,7 +57,7 @@ func (c *UserController) UpdateUser(w http.ResponseWriter, r *http.Request) {
 
 	user, err := c.updateUser(ctx, req)
 	if err != nil {
-		handleUpdateUserError(w, err)
+		handleUpdateUserError(ctx, w, err)
 		return
 	}
 

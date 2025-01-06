@@ -16,7 +16,6 @@ import (
 	"github.com/slham/sandbox-api/dao"
 	"github.com/slham/sandbox-api/handler"
 	"github.com/slham/sandbox-api/middlewares"
-	"github.com/slham/toolbelt/l"
 )
 
 const (
@@ -28,7 +27,7 @@ func main() {
 	env := os.Getenv("SANDBOX_ENVIRONMENT")
 	switch env {
 	case "LOCAL":
-		if ok := l.Initialize(l.DEBUG); !ok {
+		if ok := middlewares.Initialize(middlewares.DEBUG); !ok {
 			log.Fatalf("failed to initialize logging")
 		}
 		_, err := dao.Connect()
@@ -42,31 +41,31 @@ func main() {
 		os.Exit(1)
 	}
 
-	// Controllers
-	authController := handler.NewAuthController()
-	userController := handler.NewUserController()
-	workoutController := handler.NewWorkoutController()
-
 	r := mux.NewRouter()
 
 	// Middlewares
 	standardSessionStore := auth.NewStandardSessionStore()
-	establishSession := middlewares.Establish(standardSessionStore)
+	//establishSession := middlewares.Establish(standardSessionStore)
 	verifySession := middlewares.Verify(standardSessionStore)
 	//terminateSession := middlewares.Terminate(standardSessionStore)
 	rateLimiter := middlewares.RateLimit(env)
 
-	r.Use(l.Logging)
+	r.Use(middlewares.LoggingInbound)
 	r.Use(rateLimiter)
+
+	// Controllers
+	authController := handler.NewAuthController(standardSessionStore)
+	userController := handler.NewUserController()
+	workoutController := handler.NewWorkoutController()
 
 	// Auth APIs
 	r.Methods("GET").Path("/auth/google/login").HandlerFunc(authController.OauthGoogleLogin)
-	r.Methods("GET").Path("/auth/google/callback").HandlerFunc(middlewares.Chain(authController.OauthGoogleCallback, establishSession))
-	r.Methods("POST").Path("/login").HandlerFunc(middlewares.Chain(authController.Login, establishSession))
+	r.Methods("GET").Path("/auth/google/callback").HandlerFunc(middlewares.Chain(authController.OauthGoogleCallback))
+	r.Methods("POST").Path("/auth/login").HandlerFunc(middlewares.Chain(authController.Login))
 	//r.Methods("POST").Path("/logout").HandlerFunc(middlewares.Chain(authController.Logout, terminateSession))
 
 	// User APIs
-	r.Methods("POST").Path("/users").HandlerFunc(middlewares.Chain(userController.CreateUser, establishSession)) //TODO: should this be `/register`?
+	r.Methods("POST").Path("/users").HandlerFunc(middlewares.Chain(userController.CreateUser))
 	r.Methods("GET").Path("/users").HandlerFunc(middlewares.Chain(userController.GetUsers, verifySession))
 	r.Methods("GET").Path("/users/{user_id}").HandlerFunc(middlewares.Chain(userController.GetUser, verifySession))
 	r.Methods("PATCH").Path("/users/{user_id}").HandlerFunc(middlewares.Chain(userController.UpdateUser, verifySession))
@@ -81,7 +80,7 @@ func main() {
 
 	srv := &http.Server{
 		Addr:         ":8080", //TODO: YIKES
-		Handler:      r,
+		Handler:      middlewares.LoggingOutbound(r),
 		ReadTimeout:  SERVER_READ_TIMEOUT * time.Second,
 		WriteTimeout: SERVER_WRITE_TIMEOUT * time.Second,
 	}

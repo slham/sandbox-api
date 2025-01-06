@@ -17,15 +17,15 @@ type deleteUserRequest struct {
 	UserID string
 }
 
-func handleDeleteUserError(w http.ResponseWriter, err error) {
-	slog.Error("error deleting user", "err", err)
+func handleDeleteUserError(ctx context.Context, w http.ResponseWriter, err error) {
+	slog.ErrorContext(ctx, "error deleting user", "err", err)
 	request.RespondWithError(w, http.StatusInternalServerError, "internal server error")
 	return
 }
 
 func (c *UserController) DeleteUser(w http.ResponseWriter, r *http.Request) {
-	slog.Debug("delete user request")
 	ctx := r.Context()
+	slog.DebugContext(ctx, "delete user request")
 	vars := mux.Vars(r)
 	userID := vars["user_id"]
 
@@ -33,7 +33,7 @@ func (c *UserController) DeleteUser(w http.ResponseWriter, r *http.Request) {
 
 	err := c.deleteUser(ctx, req)
 	if err != nil {
-		handleDeleteWorkoutError(w, err)
+		handleDeleteWorkoutError(ctx, w, err)
 		return
 	}
 
