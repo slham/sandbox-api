@@ -97,6 +97,10 @@ func GetRole(ctx context.Context, q RoleQuery) (model.Role, error) {
 		return model.Role{}, fmt.Errorf("failed to get role. %w", err)
 	}
 
+	if len(roles) != 1 {
+		return model.Role{}, ErrRoleNotFound
+	}
+
 	return roles[0], nil
 }
 

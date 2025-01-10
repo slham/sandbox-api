@@ -13,6 +13,9 @@ import (
 var (
 	ErrConflictUsername = errors.New("username already exists")
 	ErrConflictEmail    = errors.New("email already exists")
+	ErrUserNotFound     = errors.New("user does not exist")
+	ErrWorkoutNotFound  = errors.New("workout does not exist")
+	ErrRoleNotFound     = errors.New("role does not exist")
 )
 
 func InsertUser(ctx context.Context, user model.User) (model.User, error) {
@@ -118,6 +121,10 @@ func GetUser(ctx context.Context, q UserQuery) (model.User, error) {
 	users, err := GetUsers(ctx, q)
 	if err != nil {
 		return model.User{}, fmt.Errorf("failed to get user. %w", err)
+	}
+
+	if len(users) != 1 {
+		return model.User{}, ErrUserNotFound
 	}
 
 	return users[0], nil

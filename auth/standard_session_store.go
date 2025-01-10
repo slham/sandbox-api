@@ -23,6 +23,9 @@ type StandardSessionStore struct {
 func NewStandardSessionStore() *StandardSessionStore {
 	key := []byte(os.Getenv("SANDBOX_STANDARD_SESSION_KEY"))
 	store := sessions.NewCookieStore(key)
+	store.Options.HttpOnly = true
+	store.Options.MaxAge = 60 * 60 //one hour
+	store.Options.SameSite = http.SameSiteStrictMode
 
 	return &StandardSessionStore{
 		cookieStore: store,
@@ -89,13 +92,15 @@ func (store *StandardSessionStore) VerifySession(w http.ResponseWriter, r *http.
 	vars := mux.Vars(r)
 	userID := vars["user_id"]
 
-	if userID != "" && userID != sessionUserID && !isAdmin(roles) {
-		slog.ErrorContext(ctx, "INTRUDER!", "session_user_id", sessionUserID, "client_user_id", userID)
-		r = stop(r, ctx)
-		http.Error(w, "FUCK OFF!", http.StatusForbidden)
-		return
-	} else {
-		slog.InfoContext(ctx, "SIR, YES, SIR!")
+	if userID != "" && userID != sessionUserID {
+		if !isAdmin(roles) {
+			slog.ErrorContext(ctx, "INTRUDER!", "session_user_id", sessionUserID, "client_user_id", userID)
+			r = stop(r, ctx)
+			http.Error(w, "FUCK OFF!", http.StatusForbidden)
+			return
+		} else {
+			slog.InfoContext(ctx, "SIR, YES, SIR!")
+		}
 	}
 
 	slog.InfoContext(ctx, "The cake is a lie!")

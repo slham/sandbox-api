@@ -24,13 +24,13 @@ func handleLoginError(ctx context.Context, w http.ResponseWriter, err error) {
 		slog.WarnContext(ctx, "error login", "err", err)
 		request.RespondWithError(w, http.StatusBadRequest, err.Error())
 		return
-	} else if errors.Is(err, ApiErrConflict) {
-		slog.ErrorContext(ctx, "user already exists", "err", err)
-		request.RespondWithError(w, http.StatusConflict, err.Error())
-		return
 	} else if errors.Is(err, ApiErrForbidden) {
 		slog.ErrorContext(ctx, "unauthenticated login attempt", "err", err)
 		request.RespondWithError(w, http.StatusForbidden, err.Error())
+		return
+	} else if errors.Is(err, ApiErrNotFound) {
+		slog.ErrorContext(ctx, "user not found", "err", err)
+		request.RespondWithError(w, http.StatusNotFound, err.Error())
 		return
 	}
 
@@ -58,7 +58,7 @@ func (c *AuthController) Login(w http.ResponseWriter, r *http.Request) {
 
 	c.hydrateSession(w, r, user)
 
-	request.RespondWithJSON(w, http.StatusNoContent, user)
+	request.RespondWithJSON(w, http.StatusOK, user)
 }
 
 func handleLogin(ctx context.Context, req LoginRequest) (model.User, error) {
@@ -68,6 +68,9 @@ func handleLogin(ctx context.Context, req LoginRequest) (model.User, error) {
 
 	user, err := dao.GetUserByUsername(ctx, req.Username)
 	if err != nil {
+		if errors.Is(err, dao.ErrUserNotFound) {
+			return user, NewApiError(404, ApiErrNotFound)
+		}
 		return user, fmt.Errorf("failed to get user. %w", err)
 	}
 

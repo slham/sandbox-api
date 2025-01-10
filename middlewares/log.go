@@ -92,14 +92,6 @@ func LoggingInbound(h http.Handler) http.Handler {
 	})
 }
 
-func LoggingOutbound(h http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		ctx := r.Context()
-		slog.DebugContext(ctx, "outbound", "headers", fmt.Sprintf("%v", w.Header()))
-		h.ServeHTTP(w, r)
-	})
-}
-
 func initContext(r *http.Request) context.Context {
 	ctx := r.Context()
 	vars := mux.Vars(r)

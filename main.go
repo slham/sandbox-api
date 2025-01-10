@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"crypto/tls"
 	"log"
 	"log/slog"
 	"net/http"
@@ -10,6 +11,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"github.com/slham/sandbox-api/auth"
 	"github.com/slham/sandbox-api/crypt"
@@ -58,11 +60,16 @@ func main() {
 	userController := handler.NewUserController()
 	workoutController := handler.NewWorkoutController()
 
+	// Health APIs
+	r.Methods("GET").Path("/").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte("Hello World"))
+	})
+
 	// Auth APIs
 	r.Methods("GET").Path("/auth/google/login").HandlerFunc(authController.OauthGoogleLogin)
 	r.Methods("GET").Path("/auth/google/callback").HandlerFunc(middlewares.Chain(authController.OauthGoogleCallback))
 	r.Methods("POST").Path("/auth/login").HandlerFunc(middlewares.Chain(authController.Login))
-	//r.Methods("POST").Path("/logout").HandlerFunc(middlewares.Chain(authController.Logout, terminateSession))
+	//r.Methods("POST").Path("/auth/logout").HandlerFunc(middlewares.Chain(authController.Logout, terminateSession))
 
 	// User APIs
 	r.Methods("POST").Path("/users").HandlerFunc(middlewares.Chain(userController.CreateUser))
@@ -78,16 +85,67 @@ func main() {
 	r.Methods("PATCH").Path("/users/{user_id}/workouts/{workout_id}").HandlerFunc(middlewares.Chain(workoutController.UpdateWorkout, verifySession))
 	r.Methods("DELETE").Path("/users/{user_id}/workouts/{workout_id}").HandlerFunc(middlewares.Chain(workoutController.DeleteWorkout, verifySession))
 
+	headersOk := handlers.AllowedHeaders([]string{
+		"Access-Control-Allow-Origin",
+		"Access-Control-Allow-Methods",
+		"Access-Control-Allow-Headers",
+		"Access-Control-Allow-Credentials",
+		"Access-Control-Expose-Headers",
+		"Access-Control-Max-Age",
+		"Access-Control-Request-Method",
+		"Access-Control-Request-Headers",
+		"Accept-Encoding",
+		"Connection",
+		"Content-Language",
+		"Content-Type",
+		"Origin",
+		"X-Requested-With",
+	})
+	originsOk := handlers.AllowedOrigins([]string{"http://localhost:3000"})
+	methodsOk := handlers.AllowedMethods([]string{
+		http.MethodGet,
+		http.MethodPost,
+		http.MethodPut,
+		http.MethodPatch,
+		http.MethodDelete,
+		http.MethodOptions,
+		http.MethodHead,
+	})
+	allowCredentials := handlers.AllowCredentials()
+
+	cors := handlers.CORS(
+		originsOk,
+		headersOk,
+		methodsOk,
+		allowCredentials,
+	)
+	handler := cors(r)
+
+	tlsConfig := &tls.Config{
+		MinVersion:               tls.VersionTLS12,
+		CurvePreferences:         []tls.CurveID{tls.CurveP521, tls.CurveP384, tls.CurveP256},
+		PreferServerCipherSuites: true,
+		CipherSuites: []uint16{
+			tls.TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,
+			tls.TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA,
+			tls.TLS_RSA_WITH_AES_256_GCM_SHA384,
+			tls.TLS_RSA_WITH_AES_256_CBC_SHA,
+		},
+	}
+
 	srv := &http.Server{
-		Addr:         ":8080", //TODO: YIKES
-		Handler:      middlewares.LoggingOutbound(r),
+		Addr:         ":443", //TODO: YIKES
+		Handler:      handler,
 		ReadTimeout:  SERVER_READ_TIMEOUT * time.Second,
 		WriteTimeout: SERVER_WRITE_TIMEOUT * time.Second,
+		TLSConfig:    tlsConfig,
+		TLSNextProto: make(map[string]func(*http.Server, *tls.Conn, http.Handler), 0),
 	}
 
 	go func() {
+		cert, key := "server.crt", "server.key"
 		slog.Info("starting server")
-		if err := srv.ListenAndServe(); err != nil {
+		if err := srv.ListenAndServeTLS(cert, key); err != nil {
 			log.Fatalf("failed to serve. %s", err)
 		}
 	}()

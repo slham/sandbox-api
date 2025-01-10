@@ -75,6 +75,10 @@ func GetWorkout(ctx context.Context, q WorkoutQuery) (model.Workout, error) {
 		return model.Workout{}, fmt.Errorf("failed to get workouts. %w", err)
 	}
 
+	if len(workouts) != 1 {
+		return model.Workout{}, ErrWorkoutNotFound
+	}
+
 	return workouts[0], nil
 }
 
