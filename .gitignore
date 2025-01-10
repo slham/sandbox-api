@@ -23,6 +23,7 @@ go.work.sum
 sandbox-api
 build/
 integration/cov*
+server.*
 
 ~
 
