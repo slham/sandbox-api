@@ -59,6 +59,7 @@ func main() {
 	authController := handler.NewAuthController(standardSessionStore)
 	userController := handler.NewUserController()
 	workoutController := handler.NewWorkoutController()
+	dataController := handler.NewDataController()
 
 	// Health APIs
 	r.Methods("GET").Path("/").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -84,6 +85,9 @@ func main() {
 	r.Methods("GET").Path("/users/{user_id}/workouts/{workout_id}").HandlerFunc(middlewares.Chain(workoutController.GetWorkout, verifySession))
 	r.Methods("PATCH").Path("/users/{user_id}/workouts/{workout_id}").HandlerFunc(middlewares.Chain(workoutController.UpdateWorkout, verifySession))
 	r.Methods("DELETE").Path("/users/{user_id}/workouts/{workout_id}").HandlerFunc(middlewares.Chain(workoutController.DeleteWorkout, verifySession))
+
+	// Data APIs
+	r.Methods("GET").Path("/users/{user_id}/data").HandlerFunc(dataController.GetData)
 
 	headersOk := handlers.AllowedHeaders([]string{
 		"Access-Control-Allow-Origin",
