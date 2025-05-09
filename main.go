@@ -86,6 +86,10 @@ func main() {
 	r.Methods("PATCH").Path("/users/{user_id}/workouts/{workout_id}").HandlerFunc(middlewares.Chain(workoutController.UpdateWorkout, verifySession))
 	r.Methods("DELETE").Path("/users/{user_id}/workouts/{workout_id}").HandlerFunc(middlewares.Chain(workoutController.DeleteWorkout, verifySession))
 
+	// Sesh APIs
+
+	// Stats APIs
+
 	// Data APIs
 	r.Methods("GET").Path("/users/{user_id}/data").HandlerFunc(dataController.GetData)
 

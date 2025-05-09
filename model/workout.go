@@ -24,6 +24,16 @@ type Exercise struct {
 	SuperSets []string `json:"superSets,omitempty"`
 }
 
+func (e Exercise) calcVolumeLoad() float64 {
+	var vload float64
+
+	for _, e := range e.Sets {
+		vload += float64(e.Weight) * float64(e.Reps)
+	}
+
+	return vload
+}
+
 type Exercises []Exercise
 
 type MuscleGroup string

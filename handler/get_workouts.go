@@ -48,7 +48,6 @@ func handleGetWorkoutsError(ctx context.Context, w http.ResponseWriter, err erro
 
 func (c *WorkoutController) GetWorkouts(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	slog.DebugContext(ctx, "get workouts request")
 	vars := mux.Vars(r)
 	userID := vars["user_id"]
 	req := getWorkoutsRequest{userID: userID}
