@@ -60,6 +60,19 @@ type Set struct {
 	Reps   int8    `json:"reps,omitempty"`
 }
 
+func (w Workout) Value() (driver.Value, error) {
+	return json.Marshal(w)
+}
+
+func (w *Workout) Scan(value interface{}) error {
+	b, ok := value.([]byte)
+	if !ok {
+		return errors.New("type assertion to []byte failed")
+	}
+
+	return json.Unmarshal(b, &w)
+}
+
 func (e Exercises) Value() (driver.Value, error) {
 	return json.Marshal(e)
 }

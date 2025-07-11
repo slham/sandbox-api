@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"log/slog"
 	"math"
 	"net/http"
@@ -36,7 +35,7 @@ func (t *retryableTransport) RoundTrip(req *http.Request) (*http.Response, error
 		if err != nil {
 			return nil, fmt.Errorf("failed to read body. %w", err)
 		}
-		req.Body = ioutil.NopCloser(bytes.NewBuffer(bodyBytes))
+		req.Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
 	}
 	// Send the request
 	resp, err := t.transport.RoundTrip(req)
@@ -50,7 +49,7 @@ func (t *retryableTransport) RoundTrip(req *http.Request) (*http.Response, error
 		drainBody(resp)
 		// Clone the request body again
 		if req.Body != nil {
-			req.Body = ioutil.NopCloser(bytes.NewBuffer(bodyBytes))
+			req.Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
 		}
 		// Retry the request
 		resp, err = t.transport.RoundTrip(req)
@@ -97,22 +96,22 @@ func shouldRetry(err error, resp *http.Response) bool {
 }
 
 func drainBody(resp *http.Response) {
-	if resp.Body != nil {
-		io.Copy(ioutil.Discard, resp.Body)
+	if resp != nil && resp.Body != nil {
+		io.Copy(io.Discard, resp.Body)
 		resp.Body.Close()
 	}
 }
 
-func (r *Requester) Head(ctx context.Context, path string, headers map[string]string, data any) (*http.Response, error) {
-	return r.request(ctx, http.MethodHead, path, headers, data)
+func (r *Requester) Head(ctx context.Context, path string, headers map[string]string) (*http.Response, error) {
+	return r.request(ctx, http.MethodHead, path, headers, nil)
 }
 
 func (r *Requester) Post(ctx context.Context, path string, headers map[string]string, data any) (*http.Response, error) {
 	return r.request(ctx, http.MethodPost, path, headers, data)
 }
 
-func (r *Requester) Get(ctx context.Context, path string, headers map[string]string, data any) (*http.Response, error) {
-	return r.request(ctx, http.MethodGet, path, headers, data)
+func (r *Requester) Get(ctx context.Context, path string, headers map[string]string) (*http.Response, error) {
+	return r.request(ctx, http.MethodGet, path, headers, nil)
 }
 
 func (r *Requester) Patch(ctx context.Context, path string, headers map[string]string, data any) (*http.Response, error) {
@@ -128,13 +127,17 @@ func (r *Requester) Delete(ctx context.Context, path string, headers map[string]
 }
 
 func (r *Requester) request(ctx context.Context, method string, path string, headers map[string]string, data any) (*http.Response, error) {
-	payload, err := json.Marshal(data)
-	if err != nil {
-		return nil, err
-	}
+  var reader io.Reader
+    if data != nil {
+    payload, err := json.Marshal(data)
+    if err != nil {
+      return nil, err
+    }
 
-	reader := bytes.NewBuffer(payload)
-	req, err := http.NewRequestWithContext(ctx, method, r.ServiceURL+path, reader)
+    reader = bytes.NewBuffer(payload)
+  }
+  url := r.ServiceURL+path
+	req, err := http.NewRequestWithContext(ctx, method, url, reader)
 	if err != nil {
 		return nil, err
 	}
