@@ -1,5 +1,7 @@
 package model
 
+import "time"
+
 type Calendar struct {
   ID string `json:"id"`
 	UserID       string    `json:"user_id"`

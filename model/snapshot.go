@@ -1,6 +1,8 @@
 package model
-type Snapshot struct {
 
+import "time"
+
+type Snapshot struct {
   ID string `json:"id"`
 	CalendarID       string    `json:"calendar_id"`
 	Done      time.Time `json:"done"`

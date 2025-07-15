@@ -2,15 +2,12 @@ package dao
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"strings"
 
 	"github.com/lib/pq"
 	"github.com/slham/sandbox-api/model"
 )
-
-var ErrConflictWorkoutName = errors.New("workout name already exists")
 
 func InsertWorkout(ctx context.Context, workout model.Workout) (model.Workout, error) {
 	_, err := getDB().ExecContext(ctx,
@@ -108,7 +105,7 @@ func GetWorkouts(ctx context.Context, q WorkoutQuery) ([]model.Workout, error) {
 	workouts := []model.Workout{}
 	rows, err := getDB().QueryContext(ctx, stmt)
 	if err != nil {
-		return workouts, fmt.Errorf("failed to query users. %w", err)
+		return workouts, fmt.Errorf("failed to query workouts. %w", err)
 	}
 
 	defer rows.Close()
