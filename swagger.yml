@@ -9,6 +9,8 @@ tags:
   - name: Auth
   - name: User
   - name: Workout
+  - name: Calendar
+  - name: Snapshot
 paths:
   /login:
     post:
@@ -26,8 +28,8 @@ paths:
       responses:
         "200":
           description: >
-            Successfully authenticated.
-            The session ID is returned in a cookie named `sandbox-cookie`. You need to include this cookie in subsequent requests.
+            Successfully authenticated. The session ID is returned in a cookie named `sandbox-cookie`. You need to include this cookie in subsequent requests.
+
           headers:
             Set-Cookie:
               schema:
@@ -226,6 +228,211 @@ paths:
           $ref: '#/components/responses/404'
         '500':
           $ref: '#/components/responses/500'
+  "/users/{user_id}/calendars":
+    post:
+      tags:
+        - Calendar
+      description: create a calendar
+      security:
+        - cookieAuth: []
+      parameters:
+        - $ref: '#/components/parameters/userIDParam'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateCalendarRequest"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Calendar'
+    get:
+      tags:
+        - Calendar
+      description: returns all user's calendars
+      security:
+        - cookieAuth: []
+      parameters:
+        - $ref: '#/components/parameters/userIDParam'
+        - $ref: '#/components/parameters/limitParam'
+        - $ref: '#/components/parameters/offsetParam'
+        - $ref: '#/components/parameters/sortParam'
+        - $ref: '#/components/parameters/sortColParam'
+      responses:
+        '200':
+          description: All the calendars for a user
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Workout'
+  "/users/{user_id}/calendars/{calendar_id}":
+    get:
+      tags:
+        - Calendar
+      description: return a calendar
+      security:
+        - cookieAuth: []
+      parameters:
+        - $ref: '#/components/parameters/userIDParam'
+        - $ref: '#/components/parameters/calendarIDParam'
+      responses:
+        '200':
+          description: The calendar
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Calendar'
+    patch:
+      tags:
+        - Calendar
+      description: update a calendar
+      security:
+        - cookieAuth: []
+      parameters:
+        - $ref: '#/components/parameters/userIDParam'
+        - $ref: '#/components/parameters/calendarIDParam'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateCalendarRequest"
+      responses:
+        '200':
+          description: The calendar
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Calendar'
+    delete:
+      tags:
+        - Calendar
+      description: delete a calendar
+      security:
+        - cookieAuth: []
+      parameters:
+        - $ref: '#/components/parameters/userIDParam'
+        - $ref: '#/components/parameters/calendarIDParam'
+      responses:
+        '204':
+          $ref: '#/components/responses/204'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+        '404':
+          $ref: '#/components/responses/404'
+        '500':
+          $ref: '#/components/responses/500'
+  "/users/{user_id}/calendars/{calendar_id}/snapshots":
+    post:
+      tags:
+        - Snapshot
+      description: create a snapshot
+      security:
+        - cookieAuth: []
+      parameters:
+        - $ref: '#/components/parameters/userIDParam'
+        - $ref: '#/components/parameters/calendarIDParam'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateSnapshotRequest"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Snapshot'
+    get:
+      tags:
+        - Snapshot
+      description: returns all user's snapshots
+      security:
+        - cookieAuth: []
+      parameters:
+        - $ref: '#/components/parameters/userIDParam'
+        - $ref: '#/components/parameters/calendarIDParam'
+        - $ref: '#/components/parameters/limitParam'
+        - $ref: '#/components/parameters/offsetParam'
+        - $ref: '#/components/parameters/sortParam'
+        - $ref: '#/components/parameters/sortColParam'
+      responses:
+        '200':
+          description: All the snapshots for a user
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Snapshot'
+  "/users/{user_id}/calendars/{calendar_id}/snapshots/{snapshot_id}":
+    get:
+      tags:
+        - Snapshot
+      description: return a snapshot
+      security:
+        - cookieAuth: []
+      parameters:
+        - $ref: '#/components/parameters/userIDParam'
+        - $ref: '#/components/parameters/calendarIDParam'
+        - $ref: '#/components/parameters/snapshotIDParam'
+      responses:
+        '200':
+          description: The snapshot
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Snapshot'
+    patch:
+      tags:
+        - Snapshot
+      description: update a snapshot
+      security:
+        - cookieAuth: []
+      parameters:
+        - $ref: '#/components/parameters/userIDParam'
+        - $ref: '#/components/parameters/calendarIDParam'
+        - $ref: '#/components/parameters/snapshotIDParam'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateSnapshotRequest"
+      responses:
+        '200':
+          description: The snapshot
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Snapshot'
+    delete:
+      tags:
+        - Snapshot
+      description: delete a snapshot
+      security:
+        - cookieAuth: []
+      parameters:
+        - $ref: '#/components/parameters/userIDParam'
+        - $ref: '#/components/parameters/calendarIDParam'
+        - $ref: '#/components/parameters/snapshotIDParam'
+      responses:
+        '204':
+          $ref: '#/components/responses/204'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+        '404':
+          $ref: '#/components/responses/404'
+        '500':
+          $ref: '#/components/responses/500'
 components:
   parameters:
     limitParam:
@@ -299,6 +506,20 @@ components:
       schema:
         type: string
       required: true
+    calendarIDParam:
+      name: calendar_id
+      in: path
+      description: Calendar ID
+      schema:
+        type: string
+      required: true
+    snapshotIDParam:
+      name: snapshot_id
+      in: path
+      description: Snapshot ID
+      schema:
+        type: string
+      required: true
   responses:
     '200':
       description: OK
@@ -344,12 +565,12 @@ components:
           example: true
         roles:
           type: array
-          items: 
+          items:
             $ref: '#/components/schemas/Role'
     Role:
       type: object
       properties:
-        id: 
+        id:
           type: integer
           example: 7
         name:
@@ -402,7 +623,7 @@ components:
           example: '2009-11-10T23:00:00Z'
         exercises:
           type: array
-          items: 
+          items:
             $ref: '#/components/schemas/Exercise'
     Exercise:
       type: object
@@ -412,11 +633,11 @@ components:
           example: 'squat'
         muscles:
           type: array
-          items: 
+          items:
             $ref: '#/components/schemas/Muscle'
         sets:
           type: array
-          items: 
+          items:
             $ref: '#/components/schemas/Set'
     Muscle:
       type: object
@@ -453,7 +674,7 @@ components:
           example: 'leg day 1'
         exercises:
           type: array
-          items: 
+          items:
             $ref: '#/components/schemas/Exercise'
     UpdateWorkoutRequest:
       type: object
@@ -463,8 +684,80 @@ components:
           example: 'leg day 1'
         exercises:
           type: array
-          items: 
+          items:
             $ref: '#/components/schemas/Exercise'
+    Calendar:
+      type: object
+      properties:
+        id:
+          type: string
+          example: 'cal_2rH4AilsxEL75kAs2Qb3KVv7Sm8'
+        name:
+          type: string
+          example: 'leg day 1'
+        user_id:
+          type: string
+          example: 'user_2rKlnIoWMG72B6UQXC7aSNPMZjQ'
+        created:
+          type: string
+          example: '2009-11-10T23:00:00Z'
+        updated:
+          type: string
+          example: '2009-11-10T23:00:00Z'
+    CreateCalendarRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          example: 'Summer Workouts'
+    UpdateCalendarRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          example: 'Summer Workouts'
+    Snapshot:
+      type: object
+      properties:
+        id:
+          type: string
+          example: 'snap_2rH4AilsxEL75kAs2Qb3KVv7Sj8'
+        calendar_id:
+          type: string
+          example: 'cal_2rH4AilsxEL75kAs2Qb3KVv7Sm8'
+        done:
+          type: number
+          example: 1752708861
+          description: 'The unix time in milliseconds the snapshot occured. This is the datetime the workout will appear on the Calendar.'
+        workout:
+          type: string
+          example: '{"name":"","exercises":[{"name":"","muscles":[{"name":"","muscleGroup":"Arms"}],"sets":[{"weight":25,"reps":10},{"weight":25,"reps":10},{"weight":25,"reps":10}]}]}'
+        created:
+          type: string
+          example: '2009-11-10T23:00:00Z'
+        updated:
+          type: string
+          example: '2009-11-10T23:00:00Z'
+    CreateSnapshotRequest:
+      type: object
+      properties:
+        done:
+          type: number
+          example: 1752708861
+          description: 'The unix time in milliseconds the snapshot occured. This is the datetime the workout will appear on the Calendar.'
+        workout:
+          type: string
+          example: '{"name":"","exercises":[{"name":"","muscles":[{"name":"","muscleGroup":"Arms"}],"sets":[{"weight":25,"reps":10},{"weight":25,"reps":10},{"weight":25,"reps":10}]}]}'
+    UpdateSnapshotRequest:
+      type: object
+      properties:
+        done:
+          type: number
+          example: 1752708861
+          description: 'The unix time in milliseconds the snapshot occured. This is the datetime the workout will appear on the Calendar.'
+        workout:
+          type: string
+          example: '{"name":"","exercises":[{"name":"","muscles":[{"name":"","muscleGroup":"Arms"}],"sets":[{"weight":25,"reps":10},{"weight":25,"reps":10},{"weight":25,"reps":10}]}]}'
     LoginRequest:
       type: object
       properties:

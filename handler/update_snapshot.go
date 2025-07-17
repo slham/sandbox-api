@@ -17,7 +17,7 @@ import (
 type updateSnapshotRequest struct {
 	UserID     string
 	SnapshotID string
-	CalendarID string         `json:"calendar_id"`
+	CalendarID string
 	Done       model.UnixTime `json:"done"`
 	Workout    model.Workout  `json:"workout"`
 }
