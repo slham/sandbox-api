@@ -33,7 +33,8 @@ func InsertSnapshot(ctx context.Context, snapshot model.Snapshot) (model.Snapsho
 }
 
 type SnapshotQuery struct {
-	ID     string
+	ID         string
+	UserID     string
 	CalendarID string
 	Query
 }

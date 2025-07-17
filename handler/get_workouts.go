@@ -43,7 +43,6 @@ func handleGetWorkoutsError(ctx context.Context, w http.ResponseWriter, err erro
 
 	slog.ErrorContext(ctx, "error getting workouts", "err", err)
 	request.RespondWithError(w, http.StatusInternalServerError, "internal server error")
-	return
 }
 
 func (c *WorkoutController) GetWorkouts(w http.ResponseWriter, r *http.Request) {
