@@ -47,9 +47,9 @@ func main() {
 
 	// Middlewares
 	standardSessionStore := auth.NewStandardSessionStore()
-	//establishSession := middlewares.Establish(standardSessionStore)
+	// establishSession := middlewares.Establish(standardSessionStore)
 	verifySession := middlewares.Verify(standardSessionStore)
-	//terminateSession := middlewares.Terminate(standardSessionStore)
+	// terminateSession := middlewares.Terminate(standardSessionStore)
 	rateLimiter := middlewares.RateLimit(env)
 
 	r.Use(middlewares.LoggingInbound)
@@ -59,6 +59,8 @@ func main() {
 	authController := handler.NewAuthController(standardSessionStore)
 	userController := handler.NewUserController()
 	workoutController := handler.NewWorkoutController()
+	calendarController := handler.NewCalendarController()
+	snapshotController := handler.NewSnapshotController()
 	dataController := handler.NewDataController()
 
 	// Health APIs
@@ -70,7 +72,7 @@ func main() {
 	r.Methods("GET").Path("/auth/google/login").HandlerFunc(authController.OauthGoogleLogin)
 	r.Methods("GET").Path("/auth/google/callback").HandlerFunc(middlewares.Chain(authController.OauthGoogleCallback))
 	r.Methods("POST").Path("/auth/login").HandlerFunc(middlewares.Chain(authController.Login))
-	//r.Methods("POST").Path("/auth/logout").HandlerFunc(middlewares.Chain(authController.Logout, terminateSession))
+	// r.Methods("POST").Path("/auth/logout").HandlerFunc(middlewares.Chain(authController.Logout, terminateSession))
 
 	// User APIs
 	r.Methods("POST").Path("/users").HandlerFunc(middlewares.Chain(userController.CreateUser))
@@ -86,9 +88,11 @@ func main() {
 	r.Methods("PATCH").Path("/users/{user_id}/workouts/{workout_id}").HandlerFunc(middlewares.Chain(workoutController.UpdateWorkout, verifySession))
 	r.Methods("DELETE").Path("/users/{user_id}/workouts/{workout_id}").HandlerFunc(middlewares.Chain(workoutController.DeleteWorkout, verifySession))
 
-	// Sesh APIs
+	// Calendar APIs
+	r.Methods("POST").Path("/users/{user_id}/calendars").HandlerFunc(middlewares.Chain(calendarController.CreateCalendar, verifySession))
 
-	// Stats APIs
+	// Snapshot APIs
+	r.Methods("POST").Path("/users/{user_id}/calendars/{calendar_id}/snapshots").HandlerFunc(middlewares.Chain(snapshotController.CreateSnapshot, verifySession))
 
 	// Data APIs
 	r.Methods("GET").Path("/users/{user_id}/data").HandlerFunc(dataController.GetData)
@@ -142,7 +146,7 @@ func main() {
 	}
 
 	srv := &http.Server{
-		Addr:         ":443", //TODO: YIKES
+		Addr:         ":443", // TODO: YIKES
 		Handler:      handler,
 		ReadTimeout:  SERVER_READ_TIMEOUT * time.Second,
 		WriteTimeout: SERVER_WRITE_TIMEOUT * time.Second,

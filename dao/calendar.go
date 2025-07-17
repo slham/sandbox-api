@@ -9,9 +9,9 @@ import (
 	"github.com/slham/sandbox-api/model"
 )
 
-func InsertCalendar(ctx context.Context, calendar model.Calendar) (model.Calendar, error){
+func InsertCalendar(ctx context.Context, calendar model.Calendar) (model.Calendar, error) {
 	_, err := getDB().ExecContext(ctx,
-  `INSERT INTO sandbox.calendar(
+		`INSERT INTO sandbox.calendar(
     id,
     name,
     user_id
@@ -21,12 +21,11 @@ func InsertCalendar(ctx context.Context, calendar model.Calendar) (model.Calenda
     $2,
     $3
   )`,
-    calendar.ID,
-    calendar.Name,
-    calendar.UserID,
-  )
-
-  if err != nil {
+		calendar.ID,
+		calendar.Name,
+		calendar.UserID,
+	)
+	if err != nil {
 		if pgErr, ok := err.(*pq.Error); ok {
 			if pgErr.Code == "23505" {
 				if strings.Contains(pgErr.Message, "u_calendar_name") {
@@ -37,7 +36,7 @@ func InsertCalendar(ctx context.Context, calendar model.Calendar) (model.Calenda
 		}
 		return calendar, fmt.Errorf("failed to insert calendar. %w", err)
 	}
-  return calendar, nil
+	return calendar, nil
 }
 
 type CalendarQuery struct {

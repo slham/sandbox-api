@@ -1,20 +1,19 @@
 package dao
 
 import (
+	"errors"
 	"fmt"
 	"strings"
-	"errors"
 )
 
-
 var (
-	ErrConflictUsername = errors.New("username already exists")
-	ErrConflictEmail    = errors.New("email already exists")
-  ErrConflictWorkoutName = errors.New("workout name already exists")
-  ErrConflictCalendarName = errors.New("calendar name already exists")
-	ErrUserNotFound     = errors.New("user does not exist")
-	ErrWorkoutNotFound  = errors.New("workout does not exist")
-	ErrRoleNotFound     = errors.New("role does not exist")
+	ErrConflictUsername     = errors.New("username already exists")
+	ErrConflictEmail        = errors.New("email already exists")
+	ErrConflictWorkoutName  = errors.New("workout name already exists")
+	ErrConflictCalendarName = errors.New("calendar name already exists")
+	ErrUserNotFound         = errors.New("user does not exist")
+	ErrWorkoutNotFound      = errors.New("workout does not exist")
+	ErrRoleNotFound         = errors.New("role does not exist")
 	ErrCalendarNotFound     = errors.New("calendar does not exist")
 	ErrSnapshotNotFound     = errors.New("snapshot does not exist")
 )
