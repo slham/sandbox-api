@@ -48,7 +48,7 @@ func (c *SnapshotController) GetSnapshot(w http.ResponseWriter, r *http.Request)
 }
 
 func (c *SnapshotController) getSnapshotByID(ctx context.Context, req getSnapshotRequest) (model.Snapshot, error) {
-	snapshot, err := dao.GetSnapshotByID(ctx, req.UserID, req.SnapshotID)
+	snapshot, err := dao.GetSnapshotByID(ctx, req.SnapshotID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return snapshot, NewApiError(404, ApiErrNotFound)

@@ -75,6 +75,7 @@ func (c *SnapshotController) GetSnapshots(w http.ResponseWriter, r *http.Request
 
 func (c *SnapshotController) getSnapshots(ctx context.Context, req getSnapshotsRequest) ([]model.Snapshot, error) {
 	q := dao.SnapshotQuery{
+		CalendarID: req.calendarID,
 		Query: dao.Query{
 			SortCol: req.query.APIQuery.SortCol,
 			Sort:    req.query.APIQuery.Sort,

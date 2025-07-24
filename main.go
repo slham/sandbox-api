@@ -90,9 +90,17 @@ func main() {
 
 	// Calendar APIs
 	r.Methods("POST").Path("/users/{user_id}/calendars").HandlerFunc(middlewares.Chain(calendarController.CreateCalendar, verifySession))
+	r.Methods("GET").Path("/users/{user_id}/calendars").HandlerFunc(middlewares.Chain(calendarController.GetCalendars, verifySession))
+	r.Methods("GET").Path("/users/{user_id}/calendars/{calendar_id}").HandlerFunc(middlewares.Chain(calendarController.GetCalendar, verifySession))
+	r.Methods("PATCH").Path("/users/{user_id}/calendars/{calendar_id}").HandlerFunc(middlewares.Chain(calendarController.UpdateCalendar, verifySession))
+	r.Methods("DELETE").Path("/users/{user_id}/calendars/{calendar_id}").HandlerFunc(middlewares.Chain(calendarController.DeleteCalendar, verifySession))
 
 	// Snapshot APIs
 	r.Methods("POST").Path("/users/{user_id}/calendars/{calendar_id}/snapshots").HandlerFunc(middlewares.Chain(snapshotController.CreateSnapshot, verifySession))
+	r.Methods("GET").Path("/users/{user_id}/calendars/{calendar_id}/snapshots").HandlerFunc(middlewares.Chain(snapshotController.GetSnapshots, verifySession))
+	r.Methods("GET").Path("/users/{user_id}/calendars/{calendar_id}/snapshots/{snapshot_id}").HandlerFunc(middlewares.Chain(snapshotController.GetSnapshot, verifySession))
+	r.Methods("PATCH").Path("/users/{user_id}/calendars/{calendar_id}/snapshots/{snapshot_id}").HandlerFunc(middlewares.Chain(snapshotController.UpdateSnapshot, verifySession))
+	r.Methods("DELETE").Path("/users/{user_id}/calendars/{calendar_id}/snapshots/{snapshot_id}").HandlerFunc(middlewares.Chain(snapshotController.DeleteSnapshot, verifySession))
 
 	// Data APIs
 	r.Methods("GET").Path("/users/{user_id}/data").HandlerFunc(dataController.GetData)

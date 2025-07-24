@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"time"
 
 	"github.com/gorilla/mux"
 	"github.com/slham/sandbox-api/dao"
@@ -18,8 +19,8 @@ type updateSnapshotRequest struct {
 	UserID     string
 	SnapshotID string
 	CalendarID string
-	Done       model.UnixTime `json:"done"`
-	Workout    model.Workout  `json:"workout"`
+	Done       time.Time     `json:"done"`
+	Workout    model.Workout `json:"workout"`
 }
 
 func handleUpdateSnapshotError(ctx context.Context, w http.ResponseWriter, err error) {
