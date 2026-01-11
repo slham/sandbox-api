@@ -2,7 +2,6 @@ package dao
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"strings"
 
@@ -10,13 +9,6 @@ import (
 	"github.com/slham/sandbox-api/model"
 )
 
-var (
-	ErrConflictUsername = errors.New("username already exists")
-	ErrConflictEmail    = errors.New("email already exists")
-	ErrUserNotFound     = errors.New("user does not exist")
-	ErrWorkoutNotFound  = errors.New("workout does not exist")
-	ErrRoleNotFound     = errors.New("role does not exist")
-)
 
 func InsertUser(ctx context.Context, user model.User) (model.User, error) {
 	_, err := getDB().ExecContext(ctx,

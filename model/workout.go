@@ -24,6 +24,16 @@ type Exercise struct {
 	SuperSets []string `json:"superSets,omitempty"`
 }
 
+func (e Exercise) calcVolumeLoad() float64 {
+	var vload float64
+
+	for _, e := range e.Sets {
+		vload += float64(e.Weight) * float64(e.Reps)
+	}
+
+	return vload
+}
+
 type Exercises []Exercise
 
 type MuscleGroup string
@@ -48,6 +58,19 @@ const (
 type Set struct {
 	Weight float32 `json:"weight,omitempty"`
 	Reps   int8    `json:"reps,omitempty"`
+}
+
+func (w Workout) Value() (driver.Value, error) {
+	return json.Marshal(w)
+}
+
+func (w *Workout) Scan(value interface{}) error {
+	b, ok := value.([]byte)
+	if !ok {
+		return errors.New("type assertion to []byte failed")
+	}
+
+	return json.Unmarshal(b, &w)
 }
 
 func (e Exercises) Value() (driver.Value, error) {
